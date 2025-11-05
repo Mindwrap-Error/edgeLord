@@ -4,11 +4,14 @@ using namespace std;
 
 using json = nlohmann::json;
 
+int type_to_int(string& s);
+int poi_to_int(string& s);
+
 struct Node{
     int node_id;
     double lat;
     double lon;
-    vector<string> pois;
+    vector<bool> pois;
 
     static void from_json(json& j, Node& n);
 };
@@ -29,12 +32,20 @@ struct Edge{
 };
 
 class Graph{
+    public:
     int num_nodes;
     vector<Node> nodes;
     map<int,Edge> edges;// edge_id -> edge
     vector<vector<pair<int,int>>> adjlist;
     //adjlist[node1_id] = {{node2,edge_id},...}
-
+    
     static void from_json(json& j, Graph& g);
 
+    json remove_edge(const json& q1);
+
+    json mod_edge(const json& q2);
+
+    json shortest_path(const json& q3);
+
+    json knn(const json& q4);
 };

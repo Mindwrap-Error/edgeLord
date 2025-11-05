@@ -11,8 +11,8 @@
 using json = nlohmann::json;
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <graph.json> <queries.json>" << std::endl;
+    if (argc != 4) {
+        std::cerr << "Usage: " << argv[0] << " <graph.json> <queries.json> <output.json>" << std::endl;
         return 1;
     }
 
@@ -21,7 +21,16 @@ int main(int argc, char* argv[]) {
         Add your graph reading and processing code here
         Initialize any classes and data structures needed for query processing
     */
-   Graph graph;
+    std::ifstream graph_file(argv[1]);
+    if (!graph_file.is_open()) {
+        std::cerr << "Failed to open " << argv[2] << std::endl;
+        return 1;
+    }
+    json graph_json;
+    graph_file >> graph_json;
+    Graph graph;
+    Graph::from_json(graph_json,graph);
+
 
     // Read queries from second file
     std::ifstream queries_file(argv[2]);
@@ -51,7 +60,7 @@ int main(int argc, char* argv[]) {
         results.push_back(result);
     }
 
-    std::ofstream output_file("output.json");
+    std::ofstream output_file(argv[3]);
     if (!output_file.is_open()) {
         std::cerr << "Failed to open output.json for writing" << std::endl;
         return 1;
