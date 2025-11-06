@@ -1,7 +1,10 @@
 #include <bits/stdc++.h>
 #include "json.hpp"
 using namespace std;
-
+#include <limits>       // For DBL_MAX
+#include <cmath>        // For _euclidean_dist_sq
+#include <unordered_set> // For forbidden nodes
+// these need to be included if we remove bits/stdc++.h
 using json = nlohmann::json;
 
 int type_to_int(string& s);
@@ -48,4 +51,11 @@ class Graph{
     json shortest_path(const json& q3);
 
     json knn(const json& q4);
+
+    private:
+    //dijkstra
+    pair<vector<double>, vector<int>> _simple_dijkstra(int source, const string& mode, const vector<bool>&forbidden_nodes, const vector<bool>& not_forbidden_types);
+    //helper function for dijkstra
+    double _calc_timecost(const Edge& edge, double T_arrival);
+
 };
