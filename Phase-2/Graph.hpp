@@ -1,0 +1,73 @@
+#include <bits/stdc++.h>
+#include "json.hpp"
+using namespace std;
+#include <limits>       // For DBL_MAX
+#include <cmath>        // For _euclidean_dist_sq
+#include <unordered_set> // For forbidden nodes
+// these need to be included if we remove bits/stdc++.h
+using json = nlohmann::json;
+
+int type_to_int(string& s);
+int poi_to_int(string& s);
+
+struct Node{
+    int node_id;
+    double lat;
+    double lon;
+    vector<bool> pois;
+
+    static void from_json(json& j, Node& n);
+};
+
+
+
+struct Edge{
+    int edge_id;
+    int node1;
+    int node2;
+    double len;
+    double avg_time;
+    vector<double> spd_profile;// will be empty if no spd profile
+    int type;// primary = 1, secondary = 2, tertiary = 3, local = 0, expressway = 4
+    bool oneway;// true if directed edge
+    bool disabled;
+    static void from_json(json& j, Edge& e);
+};
+
+class Graph{
+    public:
+    int num_nodes;
+    vector<Node> nodes;
+    map<int,Edge> edges;// edge_id -> edge
+    vector<vector<pair<int,int>>> adjlist;
+    //adjlist[node1_id] = {{node2,edge_id},...}
+    
+    static void from_json(json& j, Graph& g);
+
+    json remove_edge(const json& q1);
+
+    json mod_edge(const json& q2);
+
+    json shortest_path(const json& q3);
+
+    json knn(const json& q4);
+
+    json k_shortest_paths_exact(const json& query);
+
+    json k_shortest_paths_heuristic(const json& query);
+
+    json approx_shortest_path(const json& query);
+
+    private:
+    //dijkstra
+    pair<vector<double>, vector<int>> _simple_dijkstra(int source, const string& mode, const vector<bool>&forbidden_nodes, const vector<bool>& not_forbidden_types);
+    //helper function for dijkstra
+    double _calc_timecost(const Edge& edge, double T_arrival);
+
+    vector<int> _reconstruct_path(int source, int target, const vector<int>& parent);
+
+    double _calculate_path_distance(const vector<int>& path);
+
+    int _get_edge_id(int u, int v);
+
+};
