@@ -524,17 +524,17 @@ json Graph::k_shortest_paths_exact(const json& query)
         {"length", dist[target]}
     });
 
-    for (int i = 1; i < k; ++i) {
+    for (size_t i = 1; i < k; i++) {
         const vector<int>& previous_path = paths[i - 1];
 
-        for (size_t j = 0; j < previous_path.size() - 1; ++j) {
+        for (size_t j = 0; j < previous_path.size() - 1; j++) {
             int spur_node = previous_path[j];
             vector<int> root_path(previous_path.begin(), previous_path.begin() + j + 1);
 
             vector<int> edges_to_disable;
             vector<bool> forbidden_nodes_dijkstra(num_nodes, false);
 
-            // 4. Prune edges that are part of previous shortest paths
+            // prune edges that are part of previous shortest paths
             for (const auto& p : paths) {
                 if (p.size() > j + 1) {
                     vector<int> p_root(p.begin(), p.begin() + j + 1);
@@ -730,7 +730,7 @@ json Graph::k_shortest_paths_heuristic(const json& query)
     return response;
 }
 
-json Graph::approx_shortest_path(const json& query)
+json Graph::approx_shortest_path(const json& query) 
 {
     // placeholder implementation to ensure compilation; implement approximation later
     json response;
