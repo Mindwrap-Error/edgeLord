@@ -60,16 +60,19 @@ void Edge::from_json(json& j,Edge& e){
 }
 
 //functions in graph class
-void Graph::from_json(json& j,Graph& g){
+void Graph::from_json(const json& j,Graph& g){
     g.num_nodes = j["meta"]["nodes"].get<int>();
     int o = g.num_nodes;
-
+    
     for(auto x : j.at("nodes")){
         Node l;
         Node::from_json(x,l);
         g.nodes.push_back(l);
     }
+    
     //should we resize and use [] instead of push_back
+    int tmp = j.at("edges").size();
+    g.adjlist.resize(tmp);
 
     for(auto y : j.at("edges")){
         Edge e;
@@ -78,6 +81,9 @@ void Graph::from_json(json& j,Graph& g){
         g.adjlist[e.node1].push_back({e.node2,e.edge_id});
         if(!e.oneway) g.adjlist[e.node2].push_back({e.node1,e.edge_id});
     }
+    
+    // cerr << "graph successfully initialized" << endl;
+    return;
 }
 
 //ret false if edge dne or edge alr disabled
@@ -115,7 +121,7 @@ json Graph::mod_edge(const json& q2){
     vector<double> new_spd_profile;
     int new_type;
 
-    //ignore the below code till the next comment
+
     try{
         new_len = q2["patch"].at("length").get<double>();
     } catch(std::out_of_range){
@@ -172,109 +178,48 @@ json Graph::mod_edge(const json& q2){
     return answer;
 };
 
-// below function is written by AI so please ise humanise kardo
-//also baaki functions me variable names change krdo if needed
-/////////////////////////////////////////////////////////////////
-double Graph::_calc_timecost(const Edge& edge, double T_arrival) {
+
+double Graph::calc_timecost(const Edge& edge, double T_arrival) {
+    // T_arrival is in seconds and could be more than a day
+    int days = T_arrival / 86400.0;
+    T_arrival = T_arrival - 86400.0*days;
     //if no speed profile
     if (edge.spd_profile.empty()) {
         return edge.avg_time;
     }
 
-    double L_rem = edge.len;
-    double T_total_edge_cost = 0.0;
-    double T_current = T_arrival;
+    double remains = edge.len;
+    double ans = 0.0;
 
-    // 2. Loop until the entire edge length is traversed
-    while (L_rem > 1e-9) { // Use epsilon for double comparison
-        // 3. Find current 15-min (900-sec) slot [cite: 173]
-        int idx = (static_cast<int>(floor(T_current / 900.0))) % 96;
-        double current_speed = edge.spd_profile[idx];
-        
-        // If speed is 0, path is impossible
-        if (current_speed < 1e-9) {
-            return DBL_MAX; 
-        }
 
-        // 4. Find time remaining in this slot
-        double T_in_slot = fmod(T_current, 900.0);
-        double T_rem_slot = 900.0 - T_in_slot;
-        
-        double dist_coverable_in_slot = current_speed * T_rem_slot;
+    int slot = ((int) T_arrival/900 )% 24;
+    double dist_in_first_slot = edge.spd_profile[slot] * ((1+slot)*900.0-T_arrival);
+    if(remains <= dist_in_first_slot){
+        return remains/edge.spd_profile[slot];
+    }
+    else{
+        remains -= dist_in_first_slot;
+        ans += 900.0;
+        slot = (slot + 1)%24;
+    }
 
-        // 5. Check if we finish the edge in this slot
-        if (dist_coverable_in_slot + 1e-9 >= L_rem) {
-            // Yes, we finish.
-            double T_needed = L_rem / current_speed;
-            T_total_edge_cost += T_needed;
-            L_rem = 0.0;
-        } else {
-            // No, we don't finish. Use up the rest of the slot. 
-            T_total_edge_cost += T_rem_slot;
-            L_rem -= dist_coverable_in_slot;
-            T_current += T_rem_slot; // Advance time to the start of the next slot
+    while(true){
+        double dist_in_this_slot = edge.spd_profile[slot] * 900.0;
+        if(remains > dist_in_this_slot){
+            remains -= dist_in_this_slot;
+            ans+=900.0;
+            slot = (slot+1)%24;
+            continue;
+        } else{
+            ans += remains / edge.spd_profile[slot];
+            remains = 0;
+            break;
         }
     }
-    return T_total_edge_cost;
+    return ans;
 }
 
-vector<int> Graph::_reconstruct_path(int source, int target, const vector<int>& parent)
-{
-    vector<int> path;
-    int current_node = target;
-    while(current_node != -1)
-    {
-        path.push_back(current_node);
-        if (current_node == source) break;
-        current_node = parent[current_node];
-    }
-
-    if(path.empty() || path.back() != source)
-    {
-        return {};
-    }
-
-    reverse(path.begin(), path.end());
-    return path;
-}
-
-int Graph::_get_edge_id(int u, int v)
-{
-    if (u >= adjlist.size()) return -1;
-
-    for (const auto& pair : adjlist[u])
-    {
-        if (pair.first == v)
-        {
-            return pair.second;
-        }
-    }
-
-    return -1;
-}
-
-double Graph::_calculate_path_distance(const vector<int>& path)
-{
-    double total_distance = 0.0;
-    for (size_t i = 0; i < path.size() - 1; i++)
-    {
-        int u = path[i];
-        int v = path[i+1];
-
-        int edge_id = _get_edge_id(u, v);
-
-        if(edge_id == -1 || edges.find(edge_id) == edges.end())
-        {
-            return DBL_MAX;
-        }
-
-        total_distance += edges.at(edge_id).len;
-    }
-
-    return total_distance;
-}
-
-pair<vector<double>, vector<int>> Graph::_simple_dijkstra(int source, const string& mode, const vector<bool>& forbidden_nodes, const vector<bool>& not_forbidden_types) {
+pair<vector<double>, vector<int>> Graph::dijkstra(int source, const string& mode, const vector<bool>& forbidden_nodes, const vector<bool>& not_forbidden_types) {
     vector<double> dist(num_nodes,DBL_MAX);
     vector<int> parent(num_nodes,-1);
     
@@ -302,7 +247,7 @@ pair<vector<double>, vector<int>> Graph::_simple_dijkstra(int source, const stri
 
             double edge_cost;
             if (mode == "distance") edge_cost = edge.len;
-            else edge_cost = _calc_timecost(edge,dist[u]);  //someone please write this function 
+            else edge_cost = calc_timecost(edge,dist[u]);
             if (edge_cost == DBL_MAX) continue;
 
             //dijkstra logic
@@ -427,16 +372,16 @@ json Graph::shortest_path(const  json& q3){
         }
     }
 
-    //store final path in this vector
+    //final path in this vector
     vector<int> final_path;
 
-    // set this varible to false if no path exists
+    // this varible set to false if no path exists
     bool possible = true;
 
-    //mintime/dist -> set this to minimum time or distance as asked by mode
+    //mintime/dist -> this set to minimum time or distance as asked by mode
     double mincost;
 
-    auto [dist, parent] = _simple_dijkstra(source, mode, forbidden_nodes, not_forbidden_types);
+    auto [dist, parent] = dijkstra(source, mode, forbidden_nodes, not_forbidden_types);
 
     if (dist[target] == DBL_MAX) {
         possible = false;
@@ -519,7 +464,7 @@ json Graph::knn(const json& q4){
             vector<bool> forbidden_nodes(num_nodes, false);
             vector<bool> not_forbidden_types(5, true);
             //we use distance as metric in this 
-            auto [dist, parent] = _simple_dijkstra(nearest_node, "distance", forbidden_nodes, not_forbidden_types);
+            auto [dist, parent] = dijkstra(nearest_node, "distance", forbidden_nodes, not_forbidden_types);
 
             //best k nodes are selected
             for (int poi_node : poi_nodes) {
@@ -545,6 +490,72 @@ json Graph::knn(const json& q4){
     return answer;
 }
 
+json Graph::process_query(const json& query){
+    string s = query.at("type").get<string>();
+    if (s == "knn") return knn(query);
+    else if(s == "shortest_path") return shortest_path(query);
+    else if(s == "modify_edge") return mod_edge(query);
+    else if(s == "remove_edge") return remove_edge(query);
+
+}
+
+vector<int> Graph::reconstruct_path(int source, int target, const vector<int>& parent)
+{
+    vector<int> path;
+    int current_node = target;
+    while(current_node != -1)
+    {
+        path.push_back(current_node);
+        if (current_node == source) break;
+        current_node = parent[current_node];
+    }
+
+    if(path.empty() || path.back() != source)
+    {
+        return {};
+    }
+
+    reverse(path.begin(), path.end());
+    return path;
+}
+
+int Graph::get_edge_id(int u, int v)
+{
+    if (u >= adjlist.size()) return -1;
+
+    for (const auto& pair : adjlist[u])
+    {
+        if (pair.first == v)
+        {
+            return pair.second;
+        }
+    }
+
+    return -1;
+}
+
+double Graph::calculate_path_distance(const vector<int>& path)
+{
+    double total_distance = 0.0;
+    for (size_t i = 0; i < path.size() - 1; i++)
+    {
+        int u = path[i];
+        int v = path[i+1];
+
+        int edge_id = get_edge_id(u, v);
+
+        if(edge_id == -1 || edges.find(edge_id) == edges.end())
+        {
+            return DBL_MAX;
+        }
+
+        total_distance += edges.at(edge_id).len;
+    }
+
+    return total_distance;
+}
+
+
 json Graph::k_shortest_paths_exact(const json& query)
 {
     int source = query.at("source").get<int>();
@@ -563,14 +574,14 @@ json Graph::k_shortest_paths_exact(const json& query)
 
     vector<bool> initial_forbidden_nodes(num_nodes, false);
     vector<bool> initial_not_forbidden_types(5, true);
-    auto [dist, parent] = _simple_dijkstra(source, mode, initial_forbidden_nodes, initial_not_forbidden_types);
+    auto [dist, parent] = dijkstra(source, mode, initial_forbidden_nodes, initial_not_forbidden_types);
 
     if(dist[target] == DBL_MAX)
     {
         return response;
     }
 
-    vector<int> first_path = _reconstruct_path(source, target, parent);
+    vector<int> first_path = reconstruct_path(source, target, parent);
     paths.push_back(first_path);
 
     paths_json.push_back({
@@ -593,7 +604,7 @@ json Graph::k_shortest_paths_exact(const json& query)
                 if (p.size() > j + 1) {
                     vector<int> p_root(p.begin(), p.begin() + j + 1);
                     if (p_root == root_path) {
-                        int edge_id = _get_edge_id(p[j], p[j + 1]);
+                        int edge_id = get_edge_id(p[j], p[j + 1]);
                         if (edge_id != -1 && !edges.at(edge_id).disabled) {
                             edges_to_disable.push_back(edge_id);
                             edges.at(edge_id).disabled = true;
@@ -606,15 +617,15 @@ json Graph::k_shortest_paths_exact(const json& query)
                 forbidden_nodes_dijkstra[previous_path[node_idx]] = true;
             }
 
-            auto [spur_dist, spur_parent] = _simple_dijkstra(spur_node, mode, forbidden_nodes_dijkstra, initial_not_forbidden_types);
+            auto [spur_dist, spur_parent] = dijkstra(spur_node, mode, forbidden_nodes_dijkstra, initial_not_forbidden_types);
 
             if (spur_dist[target] != DBL_MAX) {
-                vector<int> spur_path = _reconstruct_path(spur_node, target, spur_parent);
+                vector<int> spur_path = reconstruct_path(spur_node, target, spur_parent);
                 
                 vector<int> total_path = root_path;
                 total_path.insert(total_path.end(), spur_path.begin() + 1, spur_path.end());
 
-                double total_distance = _calculate_path_distance(total_path);
+                double total_distance = calculate_path_distance(total_path);
 
                 if (total_distance != DBL_MAX) {
                     candidates_pq.push({total_distance, total_path});
@@ -667,10 +678,120 @@ json Graph::k_shortest_paths_exact(const json& query)
 
 json Graph::k_shortest_paths_heuristic(const json& query)
 {
-    // placeholder implementation to ensure compilation; implement heuristic later
+    //get data from query
+    int source = query.at("source").get<int>();
+    int target = query.at("target").get<int>();
+    int k = query.at("k").get<int>();
+    string mode = "distance"; //we only do distance for now
+
     json response;
     response["id"] = query.at("id");
     response["paths"] = json::array();
+
+    //these are out parameters for the heuristic
+    const double PENALTY_FACTOR = 1.4; 
+    const double MAX_STRETCH = 1.3; 
+
+    auto reconstruct_path = [&](int s, int t, const vector<int>& p) -> vector<int> {
+        if (p[t] == -1 && s != t) return {}; //no path found
+        vector<int> ans;
+        for(int v=t;v!=-1;v=p[v]) {
+            ans.push_back(v);
+            if(v == s) break; 
+        }
+        reverse(ans.begin(),ans.end());
+        return ans;
+    };
+
+    auto calculate_real_distance = [&](const vector<int>& path, const map<int, double>& modifs) -> double {
+        double dist = 0;
+        for (size_t i=0;i<path.size()-1;i++) {
+            int eid = get_edge_id(path[i], path[i+1]);
+            if (eid != -1) {
+                if (modifs.count(eid)) dist += modifs.at(eid); //use original length if modified
+                else dist += edges.at(eid).len;
+            }
+        }
+        return dist;
+    };
+
+    vector<vector<int>> paths_found;
+    map<int, double> orig_len; //map from edgeid to original length
+
+    vector<bool> forbidden_nodes(num_nodes,false);
+    vector<bool> not_forbidden_types(5, true); //all allowed
+
+    auto [dist, parents] = dijkstra(source,mode,forbidden_nodes,not_forbidden_types);
+
+    if(dist[target] == DBL_MAX) return response; 
+
+    //first path is always optimal so we add it
+    vector<int> first_path = reconstruct_path(source, target, parents);
+    double optimal_dist = dist[target];
+    paths_found.push_back(first_path);
+    response["paths"].push_back({
+        {"path", first_path},
+        {"length", optimal_dist}
+    });
+
+    //add weights penalty to edges in first path
+    int s = first_path.size();
+    for(int i=0;i<s-1;i++) {
+        int eid = get_edge_id(first_path[i],first_path[i+1]);
+        if(eid != -1) {
+            if(orig_len.find(eid) == orig_len.end()) {
+                orig_len[eid] = edges[eid].len;
+            }
+            edges[eid].len *= PENALTY_FACTOR; 
+        }
+    }
+
+    //finding rest k-1 paths
+    int attempts = 0;
+    int max = k*3; 
+    //retry are allowed if we get invalid or duplicate paths
+
+    while(paths_found.size()<k && attempts<max) {
+        attempts++;
+        auto [dists, parents] = dijkstra(source, mode, forbidden_nodes, not_forbidden_types);
+
+        if (dists[target] == DBL_MAX) break; //all paths exhausted
+        vector<int> path = reconstruct_path(source, target, parents);
+        double real_dist = calculate_real_distance(path, orig_len);
+
+        bool unique = true;
+        for (const auto& existing : paths_found) {
+            if (existing == path) {
+                unique = false;
+                break;
+            }
+        }
+
+        bool goodlen = (real_dist <= (optimal_dist*MAX_STRETCH));
+        if(unique && goodlen) {
+            paths_found.push_back(path);
+            response["paths"].push_back({
+                {"path", path},
+                {"length", real_dist}
+            });
+        }
+
+        //apply penalty irrespective of acceptance (same as before)
+        for (size_t i=0;i<path.size()-1;i++) {
+            int eid = get_edge_id(path[i], path[i+1]);
+            if (eid != -1) {
+                if (orig_len.find(eid) == orig_len.end()) {
+                    orig_len[eid] = edges[eid].len;
+                }
+                edges[eid].len *= PENALTY_FACTOR;
+            }
+        }
+    }
+    //restore original lengths
+    for (auto const& [eid, original_len] : orig_len) {
+        edges.at(eid).len = original_len;
+    }
+
     return response;
 }
 
