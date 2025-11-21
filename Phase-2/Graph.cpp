@@ -555,7 +555,6 @@ double Graph::calculate_path_distance(const vector<int>& path)
     return total_distance;
 }
 
-
 json Graph::k_shortest_paths_exact(const json& query)
 {
     int source = query.at("source").get<int>();
