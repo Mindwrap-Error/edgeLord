@@ -70,4 +70,7 @@ class Graph{
 
     int _get_edge_id(int u, int v);
 
+    double heuristic (int u, int target);
+
+    double weighted_Astar(int source, int target, double w);
 };

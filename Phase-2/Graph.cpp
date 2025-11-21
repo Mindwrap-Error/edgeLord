@@ -316,8 +316,73 @@ pair<vector<double>, vector<int>> Graph::_simple_dijkstra(int source, const stri
     return {dist, parent};
 }
 
+double Graph::heuristic (int u, int target)
+{
+    // use straight-line (Euclidean) distance on lat/lon as a simple heuristic
+    double lat1 = nodes[u].lat;
+    double lon1 = nodes[u].lon;
+    double lat2 = nodes[target].lat;
+    double lon2 = nodes[target].lon;
 
-json Graph::shortest_path(const json& q3){
+    // approximate conversion of degree to metres: 1 degree lat = 111,000 metres
+    double d_lat = abs(lat1 - lat2) * 111000;
+    double d_lon = abs(lon1 - lon2) * 111000 * cos(lat1 * M_PI / 180.0);
+
+    return sqrt(d_lat * d_lat + d_lon * d_lon);
+}
+
+double Graph::weighted_Astar(int source, int target, double w)
+{
+    if(source == target)
+    {
+        return 0.0;
+    }
+
+    priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> pq;
+
+    vector<double> g(num_nodes, DBL_MAX);
+    g[source] = 0.0;
+
+    double h_initial = heuristic(source, target);
+    pq.push({h_initial * w, source});
+
+    while(!pq.empty())
+    {
+        double curr = pq.top().first;
+        int u = pq.top().second;
+        pq.pop();
+
+        if(u==target)
+        {
+            return g[target];
+        }
+
+        double estimated = g[u] + w * heuristic(u, target);
+        if (curr > estimated + 1e-9) continue;
+
+        for(auto& linked : adjlist[u])
+        {
+            int v = linked.first;
+            int edge_id = linked.second;
+            Edge& edge = edges.at(edge_id);
+            if(edge.disabled) continue;
+
+            double weight = edge.len;
+            double guess_g = g[u] + weight;
+
+            if(guess_g < g[v])
+            {
+                g[v] =  guess_g;
+                double new_f = guess_g + w * heuristic(v, target);
+                pq.push({new_f, v});
+            }
+        }
+    }
+
+    return DBL_MAX; //path not found
+}
+
+json Graph::shortest_path(const  json& q3){
 
     int source = q3.at("source").get<int>();
     int target = q3.at("target").get<int>();
@@ -613,7 +678,39 @@ json Graph::approx_shortest_path(const json& query)
 {
     // placeholder implementation to ensure compilation; implement approximation later
     json response;
-    response["id"] = query.at("id");
-    response["path"] = json::array();
+    int id = query.at("id").get<int>();
+    double time_budget = query.at("time_budget_ms").get<double>();
+
+    double w = 1.1; //try varying with different values of w (1.0 normal A* - 5.0 very aggressive)
+    response["id"] = id;
+    vector<json> distances;
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    for(const auto& q : query.at("queries"))
+    {
+        int source = q.at("source").get<int>();
+        int target = q.at("target").get<int>();
+
+        auto curr_time = std::chrono::high_resolution_clock::now();
+        double elapsed = std::chrono::duration<double, std::milli>(curr_time - start_time).count();
+
+        if(elapsed >= time_budget)
+        {
+            break;
+        }
+
+        double dist = weighted_Astar(source, target, w);
+
+        if(dist != DBL_MAX)
+        {
+            distances.push_back({
+                {"source", source},
+                {"target", target},
+                {"approx_shortest_distance", dist}
+            });
+        }
+    }
+    response["distances"] = distances;
     return response;
 }
