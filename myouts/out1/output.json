@@ -1,0 +1,102 @@
+{
+    "meta": {
+        "id": "qset_phase1"
+    },
+    "results": [
+        {
+            "id": 1,
+            "minumum_time/minimum_distance": 37.79455203538871,
+            "path": [
+                85,
+                51,
+                67,
+                89,
+                55,
+                80,
+                82,
+                27,
+                91,
+                0,
+                94,
+                68
+            ],
+            "possible": true,
+            "processing_time": 0.038571
+        },
+        {
+            "id": 2,
+            "possible": false,
+            "processing_time": 0.005641
+        },
+        {
+            "id": 3,
+            "possible": false,
+            "processing_time": 0.005463
+        },
+        {
+            "id": 4,
+            "possible": false,
+            "processing_time": 0.001331
+        },
+        {
+            "id": 5,
+            "minumum_time/minimum_distance": 111.94718833050808,
+            "path": [
+                49,
+                19,
+                87,
+                43,
+                75,
+                23,
+                13,
+                8
+            ],
+            "possible": true,
+            "processing_time": 0.024504
+        },
+        {
+            "id": 6,
+            "nodes": [
+                25,
+                60
+            ],
+            "processing_time": 0.025258
+        },
+        {
+            "id": 7,
+            "nodes": [
+                28,
+                76,
+                71,
+                26
+            ],
+            "processing_time": 0.007402
+        },
+        {
+            "id": 8,
+            "nodes": [
+                11,
+                87,
+                75,
+                86,
+                82,
+                50,
+                5,
+                99,
+                29,
+                25
+            ],
+            "processing_time": 0.00556
+        },
+        {
+            "done": true,
+            "id": 9,
+            "processing_time": 0.002146
+        },
+        {
+            "done": true,
+            "id": 10,
+            "processing_time": 0.004341
+        }
+    ]
+}

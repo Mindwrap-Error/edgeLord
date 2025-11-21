@@ -45,15 +45,15 @@ class Graph{
     
     static void from_json(const json& j, Graph& g);
 
-    json remove_edge(const json& q1);
+    json remove_edge(const json& q1,json& answer);
 
-    json mod_edge(const json& q2);
+    json mod_edge(const json& q2,json& answer);
 
-    json shortest_path(const json& q3);
+    json shortest_path(const json& q3,json& answer);
 
-    json knn(const json& q4);
+    json knn(const json& q4,json& answer);
 
-    json process_query(const json& query);
+    json process_query(const json& query,json& answer);
 
     private:
     //dijkstra

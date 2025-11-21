@@ -1,0 +1,108 @@
+{
+    "meta": {
+        "id": "qset_phase1"
+    },
+    "results": [
+        {
+            "id": 1,
+            "minumum_time/minimum_distance": 19.98013093805859,
+            "path": [
+                13,
+                39,
+                26,
+                40,
+                30
+            ],
+            "possible": true,
+            "processing_time": 0.023408
+        },
+        {
+            "id": 2,
+            "minumum_time/minimum_distance": 1747.23,
+            "path": [
+                4,
+                25,
+                22,
+                34,
+                11,
+                6,
+                44,
+                38,
+                46,
+                8,
+                31
+            ],
+            "possible": true,
+            "processing_time": 0.015763
+        },
+        {
+            "id": 3,
+            "minumum_time/minimum_distance": 1286.9599999999998,
+            "path": [
+                22,
+                34,
+                11,
+                6,
+                44,
+                38,
+                5
+            ],
+            "possible": true,
+            "processing_time": 0.009476
+        },
+        {
+            "id": 4,
+            "minumum_time/minimum_distance": 46.635581263157164,
+            "path": [
+                5,
+                38,
+                46,
+                8,
+                31,
+                41,
+                37,
+                23,
+                21,
+                27,
+                39
+            ],
+            "possible": true,
+            "processing_time": 0.014819
+        },
+        {
+            "id": 5,
+            "possible": false,
+            "processing_time": 0.001593
+        },
+        {
+            "id": 6,
+            "nodes": [
+                14,
+                40
+            ],
+            "processing_time": 0.005648
+        },
+        {
+            "id": 7,
+            "nodes": [
+                44
+            ],
+            "processing_time": 0.002472
+        },
+        {
+            "id": 8,
+            "nodes": [],
+            "processing_time": 0.009193
+        },
+        {
+            "done": true,
+            "id": 9,
+            "processing_time": 0.001827
+        },
+        {
+            "done": true,
+            "id": 10,
+            "processing_time": 0.003871
+        }
+    ]
+}

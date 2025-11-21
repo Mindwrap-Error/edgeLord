@@ -71,8 +71,7 @@ void Graph::from_json(const json& j,Graph& g){
     }
     
     //should we resize and use [] instead of push_back
-    int tmp = j.at("edges").size();
-    g.adjlist.resize(tmp);
+    g.adjlist.resize(o);
 
     for(auto y : j.at("edges")){
         Edge e;
@@ -82,14 +81,13 @@ void Graph::from_json(const json& j,Graph& g){
         if(!e.oneway) g.adjlist[e.node2].push_back({e.node1,e.edge_id});
     }
     
-    // cerr << "graph successfully initialized" << endl;
+    // cerr << "graph initialized" << endl;
     return;
 }
 
 //ret false if edge dne or edge alr disabled
-json Graph::remove_edge(const json& q1){
+json Graph::remove_edge(const json& q1,json& answer){
     int id_rem = q1.at("edge_id").get<int>();
-    json answer;
     answer["id"] = q1.at("id").get<int>();
 
     if (edges.find(id_rem) == edges.end()) { //is there edge which we need to remove
@@ -106,7 +104,7 @@ json Graph::remove_edge(const json& q1){
     return answer;
 };
 
-json Graph::mod_edge(const json& q2){
+json Graph::mod_edge(const json& q2,json& answer){
     int mod_id = q2.at("edge_id");// id of edge to be modified
 
     // the following variables tell what has been modified and what has not been modified
@@ -121,33 +119,35 @@ json Graph::mod_edge(const json& q2){
     vector<double> new_spd_profile;
     int new_type;
 
-
-    try{
-        new_len = q2["patch"].at("length").get<double>();
-    } catch(std::out_of_range){
+    if(q2.contains("patch")){
+    if (q2["patch"].contains("length")) {
+        new_len = q2["patch"]["length"].get<double>();
+    }else {
         mod_len = false;
     }
-    try{
+    if(q2["patch"].contains("average_time")){
         new_avg_time = q2["patch"].at("average_time").get<double>();
-    } catch(std::out_of_range){
+    } else{
         mod_avg_time = false;
     }
-    try{
-        string s = q2["patch"].at("type").get<string>();
+    if(q2["patch"].contains("road_type")){
+        string s = q2["patch"].at("road_type").get<string>();
         new_type = type_to_int(s);
-    } catch(std::out_of_range){
+    } else{
         mod_type = false;
     }
-    try{
+    if(q2["patch"].contains("speed_profile")){
         auto k = q2["patch"].at("speed_profile");
         for(auto l : k){
             new_spd_profile.push_back(l.get<double>());
         }
-    } catch(std::out_of_range){
+    } else{
         mod_spd_profile = false;
     }
+}else{
+    mod_len = mod_avg_time = mod_type = mod_spd_profile = false;
+}
         
-    json answer;
     answer["id"] = q2.at("id").get<int>();
 
     if (edges.find(mod_id) == edges.end()) {
@@ -262,7 +262,7 @@ pair<vector<double>, vector<int>> Graph::dijkstra(int source, const string& mode
 }
 
 
-json Graph::shortest_path(const json& q3){
+json Graph::shortest_path(const json& q3,json& answer){
 
     int source = q3.at("source").get<int>();
     int target = q3.at("target").get<int>();
@@ -276,9 +276,7 @@ json Graph::shortest_path(const json& q3){
     bool no_constraints = false;// true if no constraints
 
     //ignore
-    try{
-        q3.at("constraints");
-    } catch(std::out_of_range){
+    if(!q3.contains("constraints")){
         no_constraints = true;
     }
 
@@ -286,27 +284,27 @@ json Graph::shortest_path(const json& q3){
     bool no_nodes_forbidden = false;
     bool no_types_forbidden = false;
 
-    //ignore
+    
     if(!no_constraints){
-        try{
+        if(q3["constraints"].contains("forbidden_road_types")){
             auto x  = q3["constraints"].at("forbidden_road_types");
             for(auto k : x){
                 string s = k.get<string>();
-                not_forbidden_types[type_to_int(s)];
+                not_forbidden_types[type_to_int(s)] = false;
             }
-        } catch(std::out_of_range){
+        } else{
             no_types_forbidden = true;
         }
-        try{
+        if(q3["constraints"].contains("forbidden_nodes")){
             auto y = q3["constraints"].at("forbidden_nodes");
             for(auto l : y){
                 forbidden_nodes[l.get<int>()] = true; 
             }
-        } catch(std::out_of_range){
+        } else{
             no_nodes_forbidden = true;
         }
     }
-
+    if(no_nodes_forbidden && no_types_forbidden) no_constraints = true;
     //final path in this vector
     vector<int> final_path;
 
@@ -332,7 +330,6 @@ json Graph::shortest_path(const json& q3){
         reverse(final_path.begin(),final_path.end());
     }
 
-    json answer; //store in and return the answer
     answer["id"] = q3.at("id").get<int>();
     answer["possible"] = possible;
 
@@ -344,7 +341,7 @@ json Graph::shortest_path(const json& q3){
 
 }
 
-json Graph::knn(const json& q4){
+json Graph::knn(const json& q4,json& answer){
 
     string s = q4.at("poi").get<string>();
     int req_poi = poi_to_int(s);
@@ -418,17 +415,20 @@ json Graph::knn(const json& q4){
     }
 
     //update answer
-    json answer;
     answer["id"] = q4.at("id").get<int>();
+    reverse(final_nodes.begin(), final_nodes.end());
     answer["nodes"] = final_nodes;
 
     return answer;
 }
 
-json Graph::process_query(const json& query){
+// static int x = 1;
+
+json Graph::process_query(const json& query,json& answer){
+    // cerr << x++ << endl;
     string s = query.at("type").get<string>();
-    if (s == "knn") return knn(query);
-    else if(s == "shortest_path") return shortest_path(query);
-    else if(s == "modify_edge") return mod_edge(query);
-    else if(s == "remove_edge") return remove_edge(query);
+    if (s == "knn") return knn(query,answer);
+    else if(s == "shortest_path") return shortest_path(query,answer);
+    else if(s == "modify_edge") return mod_edge(query,answer);
+    else if(s == "remove_edge") return remove_edge(query,answer);
 }

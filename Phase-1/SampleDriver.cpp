@@ -42,10 +42,12 @@ int main(int argc, char* argv[]) {
     }
     json queries_json;
     queries_file >> queries_json;
+    queries_file.close();
+    json meta = queries_json["meta"];
 
     std::vector<json> results;
 
-    for (const auto& query : queries_json) {
+    for (const auto& query : queries_json["events"]) {
         auto start_time = std::chrono::high_resolution_clock::now();
 
         /*
@@ -55,7 +57,8 @@ int main(int argc, char* argv[]) {
 
         // Answer each query replacing the function process_query using 
         // whatever function or class methods that you have implemented
-        json result = graph.process_query(query);
+        json result;
+        graph.process_query(query,result);
 
         auto end_time = std::chrono::high_resolution_clock::now();
         result["processing_time"] = std::chrono::duration<double, std::milli>(end_time - start_time).count();
@@ -68,7 +71,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    json output = results;
+    json output;
+    output["meta"] = meta;
+    output["results"] = results;
     output_file << output.dump(4) << std::endl;
 
     output_file.close();
