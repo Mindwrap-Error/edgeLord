@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "id": "qset_phase1"
+  },
+  "events": [
+    {
+      "type": "shortest_path",
+      "id": 1,
+      "source": 3212,
+      "target": 3759,
+      "mode": "distance",
+      "constraints": {
+        "forbidden_nodes": [
+          1499,
+          4092
+        ]
+      }
+    },
+    {
+      "type": "shortest_path",
+      "id": 2,
+      "source": 2673,
+      "target": 6980,
+      "mode": "time",
+      "constraints": {}
+    },
+    {
+      "type": "shortest_path",
+      "id": 3,
+      "source": 4791,
+      "target": 3015,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 4,
+      "source": 6159,
+      "target": 7296,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 5,
+      "source": 2901,
+      "target": 1738,
+      "mode": "time"
+    },
+    {
+      "type": "knn",
+      "id": 6,
+      "poi": "hospital",
+      "query_point": {
+        "lat": 47.42630670564963,
+        "lon": 8.550150693309385
+      },
+      "k": 6,
+      "metric": "euclidean"
+    },
+    {
+      "type": "knn",
+      "id": 7,
+      "poi": "petrol station",
+      "query_point": {
+        "lat": 47.397574179274336,
+        "lon": 8.586670927879698
+      },
+      "k": 4,
+      "metric": "euclidean"
+    },
+    {
+      "type": "knn",
+      "id": 8,
+      "poi": "restaurant",
+      "query_point": {
+        "lat": 47.39346763664417,
+        "lon": 8.620589503077053
+      },
+      "k": 10,
+      "metric": "shortest_path"
+    },
+    {
+      "type": "remove_edge",
+      "id": 9,
+      "edge_id": 4849
+    },
+    {
+      "type": "modify_edge",
+      "id": 10,
+      "edge_id": 14586,
+      "patch": {
+        "road_type": "local"
+      }
+    }
+  ]
+}

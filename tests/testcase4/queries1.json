@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "id": "qset_phase1"
+  },
+  "events": [
+    {
+      "type": "shortest_path",
+      "id": 1,
+      "source": 374,
+      "target": 669,
+      "mode": "distance"
+    },
+    {
+      "type": "shortest_path",
+      "id": 2,
+      "source": 874,
+      "target": 462,
+      "mode": "distance"
+    },
+    {
+      "type": "shortest_path",
+      "id": 3,
+      "source": 529,
+      "target": 1389,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 4,
+      "source": 1149,
+      "target": 830,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 5,
+      "source": 1207,
+      "target": 1345,
+      "mode": "distance",
+      "constraints": {
+        "forbidden_nodes": [
+          1108
+        ]
+      }
+    },
+    {
+      "type": "knn",
+      "id": 6,
+      "poi": "restaurant",
+      "query_point": {
+        "lat": 64.13244292003168,
+        "lon": -21.897765000698136
+      },
+      "k": 8,
+      "metric": "shortest_path"
+    },
+    {
+      "type": "knn",
+      "id": 7,
+      "poi": "hospital",
+      "query_point": {
+        "lat": 64.13972262289525,
+        "lon": -21.893270456609503
+      },
+      "k": 9,
+      "metric": "shortest_path"
+    },
+    {
+      "type": "knn",
+      "id": 8,
+      "poi": "hospital",
+      "query_point": {
+        "lat": 64.12338736297495,
+        "lon": -21.89063797203551
+      },
+      "k": 9,
+      "metric": "euclidean"
+    },
+    {
+      "type": "remove_edge",
+      "id": 9,
+      "edge_id": 1868
+    },
+    {
+      "type": "modify_edge",
+      "id": 10,
+      "edge_id": 4185,
+      "patch": {
+        "road_type": "local"
+      }
+    }
+  ]
+}

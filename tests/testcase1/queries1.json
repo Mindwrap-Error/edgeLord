@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "id": "qset_phase1"
+  },
+  "events": [
+    {
+      "type": "shortest_path",
+      "id": 1,
+      "source": 85,
+      "target": 68,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 2,
+      "source": 71,
+      "target": 25,
+      "mode": "time",
+      "constraints": {}
+    },
+    {
+      "type": "shortest_path",
+      "id": 3,
+      "source": 45,
+      "target": 56,
+      "mode": "distance"
+    },
+    {
+      "type": "shortest_path",
+      "id": 4,
+      "source": 4,
+      "target": 2,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 5,
+      "source": 49,
+      "target": 8,
+      "mode": "time"
+    },
+    {
+      "type": "knn",
+      "id": 6,
+      "poi": "hospital",
+      "query_point": {
+        "lat": 43.73588469889761,
+        "lon": 7.4191544189358
+      },
+      "k": 4,
+      "metric": "shortest_path"
+    },
+    {
+      "type": "knn",
+      "id": 7,
+      "poi": "restaurant",
+      "query_point": {
+        "lat": 43.746163581389034,
+        "lon": 7.430556770198308
+      },
+      "k": 6,
+      "metric": "shortest_path"
+    },
+    {
+      "type": "knn",
+      "id": 8,
+      "poi": "pharmacy",
+      "query_point": {
+        "lat": 43.73452776066945,
+        "lon": 7.417880258866747
+      },
+      "k": 10,
+      "metric": "euclidean"
+    },
+    {
+      "type": "remove_edge",
+      "id": 9,
+      "edge_id": 1060
+    },
+    {
+      "type": "modify_edge",
+      "id": 10,
+      "edge_id": 1094,
+      "patch": {
+        "road_type": "local"
+      }
+    }
+  ]
+}

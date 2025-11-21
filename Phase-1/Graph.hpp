@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include<iostream>
 #include "json.hpp"
 using namespace std;
 #include <limits>       // For DBL_MAX
@@ -42,7 +43,7 @@ class Graph{
     vector<vector<pair<int,int>>> adjlist;
     //adjlist[node1_id] = {{node2,edge_id},...}
     
-    static void from_json(json& j, Graph& g);
+    static void from_json(const json& j, Graph& g);
 
     json remove_edge(const json& q1);
 
@@ -52,10 +53,12 @@ class Graph{
 
     json knn(const json& q4);
 
+    json process_query(const json& query);
+
     private:
     //dijkstra
-    pair<vector<double>, vector<int>> _simple_dijkstra(int source, const string& mode, const vector<bool>&forbidden_nodes, const vector<bool>& not_forbidden_types);
+    pair<vector<double>, vector<int>> dijkstra(int source, const string& mode, const vector<bool>&forbidden_nodes, const vector<bool>& not_forbidden_types);
     //helper function for dijkstra
-    double _calc_timecost(const Edge& edge, double T_arrival);
+    double calc_timecost(const Edge& edge, double T_arrival);
 
 };

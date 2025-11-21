@@ -1,0 +1,88 @@
+{
+  "meta": {
+    "id": "qset_phase1"
+  },
+  "events": [
+    {
+      "type": "shortest_path",
+      "id": 1,
+      "source": 21365,
+      "target": 12580,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 2,
+      "source": 10341,
+      "target": 2807,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 3,
+      "source": 10802,
+      "target": 18648,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 4,
+      "source": 24147,
+      "target": 3502,
+      "mode": "distance"
+    },
+    {
+      "type": "shortest_path",
+      "id": 5,
+      "source": 24452,
+      "target": 17392,
+      "mode": "time"
+    },
+    {
+      "type": "knn",
+      "id": 6,
+      "poi": "hotel",
+      "query_point": {
+        "lat": 26.899628831543094,
+        "lon": 75.76722058256563
+      },
+      "k": 6,
+      "metric": "euclidean"
+    },
+    {
+      "type": "knn",
+      "id": 7,
+      "poi": "hospital",
+      "query_point": {
+        "lat": 26.919918913620776,
+        "lon": 75.76018468584073
+      },
+      "k": 9,
+      "metric": "shortest_path"
+    },
+    {
+      "type": "knn",
+      "id": 8,
+      "poi": "petrol station",
+      "query_point": {
+        "lat": 26.951048805729382,
+        "lon": 75.86561451784884
+      },
+      "k": 9,
+      "metric": "shortest_path"
+    },
+    {
+      "type": "remove_edge",
+      "id": 9,
+      "edge_id": 19846
+    },
+    {
+      "type": "modify_edge",
+      "id": 10,
+      "edge_id": 29482,
+      "patch": {
+        "road_type": "local"
+      }
+    }
+  ]
+}

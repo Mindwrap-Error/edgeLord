@@ -1,0 +1,44 @@
+[
+  {
+    "id": 0,
+    "nodes": [
+      2
+    ]
+  },
+  {
+    "id": 1,
+    "possible": true,
+    "minimum_time": 32.484991856753865,
+    "path": [
+      4,
+      0
+    ]
+  },
+  {
+    "id": 2,
+    "nodes": [
+      2
+    ]
+  },
+  {
+    "done": true
+  },
+  {
+    "id": 4,
+    "possible": true,
+    "minimum_time": 38.49099696688419,
+    "path": [
+      3,
+      4
+    ]
+  },
+  {
+    "id": 5,
+    "possible": true,
+    "minimum_time": 37.01853611476451,
+    "path": [
+      2,
+      3
+    ]
+  }
+]

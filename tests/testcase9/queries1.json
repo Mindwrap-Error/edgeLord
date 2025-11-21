@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "id": "qset_phase1"
+  },
+  "events": [
+    {
+      "type": "shortest_path",
+      "id": 1,
+      "source": 3671,
+      "target": 1058,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 2,
+      "source": 2552,
+      "target": 4014,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 3,
+      "source": 1432,
+      "target": 12,
+      "mode": "distance"
+    },
+    {
+      "type": "shortest_path",
+      "id": 4,
+      "source": 2643,
+      "target": 3462,
+      "mode": "time",
+      "constraints": {}
+    },
+    {
+      "type": "shortest_path",
+      "id": 5,
+      "source": 3886,
+      "target": 1255,
+      "mode": "avg_time"
+    },
+    {
+      "type": "knn",
+      "id": 6,
+      "poi": "restaurant",
+      "query_point": {
+        "lat": 40.73193862050197,
+        "lon": -73.98388158838293
+      },
+      "k": 3,
+      "metric": "shortest_path"
+    },
+    {
+      "type": "knn",
+      "id": 7,
+      "poi": "restaurant",
+      "query_point": {
+        "lat": 40.75001697031685,
+        "lon": -73.98805381022304
+      },
+      "k": 8,
+      "metric": "euclidean"
+    },
+    {
+      "type": "knn",
+      "id": 8,
+      "poi": "hotel",
+      "query_point": {
+        "lat": 40.861311026195715,
+        "lon": -73.92190079806696
+      },
+      "k": 8,
+      "metric": "euclidean"
+    },
+    {
+      "type": "remove_edge",
+      "id": 9,
+      "edge_id": 4296
+    },
+    {
+      "type": "modify_edge",
+      "id": 10,
+      "edge_id": 3370,
+      "patch": {
+        "length": 109.68
+      }
+    }
+  ]
+}

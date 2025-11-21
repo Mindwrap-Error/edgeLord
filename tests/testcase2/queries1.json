@@ -1,0 +1,109 @@
+{
+  "meta": {
+    "id": "qset_phase1"
+  },
+  "events": [
+    {
+      "type": "shortest_path",
+      "id": 1,
+      "source": 59,
+      "target": 11,
+      "mode": "time",
+      "constraints": {
+        "forbidden_road_types": [
+          "primary"
+        ]
+      }
+    },
+    {
+      "type": "shortest_path",
+      "id": 2,
+      "source": 80,
+      "target": 113,
+      "mode": "distance"
+    },
+    {
+      "type": "shortest_path",
+      "id": 3,
+      "source": 96,
+      "target": 125,
+      "mode": "distance",
+      "constraints": {
+        "forbidden_nodes": [
+          167,
+          80
+        ]
+      }
+    },
+    {
+      "type": "shortest_path",
+      "id": 4,
+      "source": 159,
+      "target": 109,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 5,
+      "source": 152,
+      "target": 133,
+      "mode": "distance",
+      "constraints": {
+        "forbidden_nodes": [
+          38,
+          129,
+          39
+        ],
+        "forbidden_road_types": [
+          "local"
+        ]
+      }
+    },
+    {
+      "type": "knn",
+      "id": 6,
+      "poi": "atm",
+      "query_point": {
+        "lat": 19.133983806300986,
+        "lon": 72.92838064115148
+      },
+      "k": 3,
+      "metric": "euclidean"
+    },
+    {
+      "type": "knn",
+      "id": 7,
+      "poi": "restaurant",
+      "query_point": {
+        "lat": 19.11896855471521,
+        "lon": 72.91585294513109
+      },
+      "k": 6,
+      "metric": "shortest_path"
+    },
+    {
+      "type": "knn",
+      "id": 8,
+      "poi": "petrol station",
+      "query_point": {
+        "lat": 19.124890568673084,
+        "lon": 72.91775287135965
+      },
+      "k": 8,
+      "metric": "shortest_path"
+    },
+    {
+      "type": "remove_edge",
+      "id": 9,
+      "edge_id": 1007
+    },
+    {
+      "type": "modify_edge",
+      "id": 10,
+      "edge_id": 1394,
+      "patch": {
+        "length": 51.39
+      }
+    }
+  ]
+}

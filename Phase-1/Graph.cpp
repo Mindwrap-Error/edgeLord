@@ -60,16 +60,19 @@ void Edge::from_json(json& j,Edge& e){
 }
 
 //functions in graph class
-void Graph::from_json(json& j,Graph& g){
+void Graph::from_json(const json& j,Graph& g){
     g.num_nodes = j["meta"]["nodes"].get<int>();
     int o = g.num_nodes;
-
+    
     for(auto x : j.at("nodes")){
         Node l;
         Node::from_json(x,l);
         g.nodes.push_back(l);
     }
+    
     //should we resize and use [] instead of push_back
+    int tmp = j.at("edges").size();
+    g.adjlist.resize(tmp);
 
     for(auto y : j.at("edges")){
         Edge e;
@@ -78,6 +81,9 @@ void Graph::from_json(json& j,Graph& g){
         g.adjlist[e.node1].push_back({e.node2,e.edge_id});
         if(!e.oneway) g.adjlist[e.node2].push_back({e.node1,e.edge_id});
     }
+    
+    // cerr << "graph successfully initialized" << endl;
+    return;
 }
 
 //ret false if edge dne or edge alr disabled
@@ -115,7 +121,7 @@ json Graph::mod_edge(const json& q2){
     vector<double> new_spd_profile;
     int new_type;
 
-    //ignore the below code till the next comment
+
     try{
         new_len = q2["patch"].at("length").get<double>();
     } catch(std::out_of_range){
@@ -172,53 +178,48 @@ json Graph::mod_edge(const json& q2){
     return answer;
 };
 
-// below function is written by AI so please ise humanise kardo
-//also baaki functions me variable names change krdo if needed
-/////////////////////////////////////////////////////////////////
-double Graph::_calc_timecost(const Edge& edge, double T_arrival) {
+
+double Graph::calc_timecost(const Edge& edge, double T_arrival) {
+    // T_arrival is in seconds and could be more than a day
+    int days = T_arrival / 86400.0;
+    T_arrival = T_arrival - 86400.0*days;
     //if no speed profile
     if (edge.spd_profile.empty()) {
         return edge.avg_time;
     }
 
-    double L_rem = edge.len;
-    double T_total_edge_cost = 0.0;
-    double T_current = T_arrival;
+    double remains = edge.len;
+    double ans = 0.0;
 
-    // 2. Loop until the entire edge length is traversed
-    while (L_rem > 1e-9) { // Use epsilon for double comparison
-        // 3. Find current 15-min (900-sec) slot [cite: 173]
-        int idx = (static_cast<int>(floor(T_current / 900.0))) % 96;
-        double current_speed = edge.spd_profile[idx];
-        
-        // If speed is 0, path is impossible
-        if (current_speed < 1e-9) {
-            return DBL_MAX; 
-        }
 
-        // 4. Find time remaining in this slot
-        double T_in_slot = fmod(T_current, 900.0);
-        double T_rem_slot = 900.0 - T_in_slot;
-        
-        double dist_coverable_in_slot = current_speed * T_rem_slot;
+    int slot = ((int) T_arrival/900 )% 24;
+    double dist_in_first_slot = edge.spd_profile[slot] * ((1+slot)*900.0-T_arrival);
+    if(remains <= dist_in_first_slot){
+        return remains/edge.spd_profile[slot];
+    }
+    else{
+        remains -= dist_in_first_slot;
+        ans += 900.0;
+        slot = (slot + 1)%24;
+    }
 
-        // 5. Check if we finish the edge in this slot
-        if (dist_coverable_in_slot + 1e-9 >= L_rem) {
-            // Yes, we finish.
-            double T_needed = L_rem / current_speed;
-            T_total_edge_cost += T_needed;
-            L_rem = 0.0;
-        } else {
-            // No, we don't finish. Use up the rest of the slot. 
-            T_total_edge_cost += T_rem_slot;
-            L_rem -= dist_coverable_in_slot;
-            T_current += T_rem_slot; // Advance time to the start of the next slot
+    while(true){
+        double dist_in_this_slot = edge.spd_profile[slot] * 900.0;
+        if(remains > dist_in_this_slot){
+            remains -= dist_in_this_slot;
+            ans+=900.0;
+            slot = (slot+1)%24;
+            continue;
+        } else{
+            ans += remains / edge.spd_profile[slot];
+            remains = 0;
+            break;
         }
     }
-    return T_total_edge_cost;
+    return ans;
 }
 
-pair<vector<double>, vector<int>> Graph::_simple_dijkstra(int source, const string& mode, const vector<bool>& forbidden_nodes, const vector<bool>& not_forbidden_types) {
+pair<vector<double>, vector<int>> Graph::dijkstra(int source, const string& mode, const vector<bool>& forbidden_nodes, const vector<bool>& not_forbidden_types) {
     vector<double> dist(num_nodes,DBL_MAX);
     vector<int> parent(num_nodes,-1);
     
@@ -246,7 +247,7 @@ pair<vector<double>, vector<int>> Graph::_simple_dijkstra(int source, const stri
 
             double edge_cost;
             if (mode == "distance") edge_cost = edge.len;
-            else edge_cost = _calc_timecost(edge,dist[u]);  //someone please write this function 
+            else edge_cost = calc_timecost(edge,dist[u]);
             if (edge_cost == DBL_MAX) continue;
 
             //dijkstra logic
@@ -306,16 +307,16 @@ json Graph::shortest_path(const json& q3){
         }
     }
 
-    //store final path in this vector
+    //final path in this vector
     vector<int> final_path;
 
-    // set this varible to false if no path exists
+    // this varible set to false if no path exists
     bool possible = true;
 
-    //mintime/dist -> set this to minimum time or distance as asked by mode
+    //mintime/dist -> this set to minimum time or distance as asked by mode
     double mincost;
 
-    auto [dist, parent] = _simple_dijkstra(source, mode, forbidden_nodes, not_forbidden_types);
+    auto [dist, parent] = dijkstra(source, mode, forbidden_nodes, not_forbidden_types);
 
     if (dist[target] == DBL_MAX) {
         possible = false;
@@ -398,7 +399,7 @@ json Graph::knn(const json& q4){
             vector<bool> forbidden_nodes(num_nodes, false);
             vector<bool> not_forbidden_types(5, true);
             //we use distance as metric in this 
-            auto [dist, parent] = _simple_dijkstra(nearest_node, "distance", forbidden_nodes, not_forbidden_types);
+            auto [dist, parent] = dijkstra(nearest_node, "distance", forbidden_nodes, not_forbidden_types);
 
             //best k nodes are selected
             for (int poi_node : poi_nodes) {
@@ -422,4 +423,12 @@ json Graph::knn(const json& q4){
     answer["nodes"] = final_nodes;
 
     return answer;
+}
+
+json Graph::process_query(const json& query){
+    string s = query.at("type").get<string>();
+    if (s == "knn") return knn(query);
+    else if(s == "shortest_path") return shortest_path(query);
+    else if(s == "modify_edge") return mod_edge(query);
+    else if(s == "remove_edge") return remove_edge(query);
 }

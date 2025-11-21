@@ -1,0 +1,38 @@
+[
+  {
+    "type": "k_shortest_paths",
+    "id": 0,
+    "source": 4771,
+    "target": 1358,
+    "k": 3,
+    "mode": "distance"
+  },
+  {
+    "type": "k_shortest_paths_heuristic",
+    "id": 1,
+    "source": 12822,
+    "target": 11093,
+    "k": 8,
+    "overlap_threshold": 60
+  },
+  {
+    "type": "approx_shortest_path",
+    "id": 2,
+    "queries": [
+      {
+        "source": 12339,
+        "target": 2932
+      },
+      {
+        "source": 13916,
+        "target": 11518
+      },
+      {
+        "source": 104,
+        "target": 12278
+      }
+    ],
+    "time_budget_ms": 20,
+    "acceptable_error_pct": 5.0
+  }
+]

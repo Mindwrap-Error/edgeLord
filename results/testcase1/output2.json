@@ -1,0 +1,36 @@
+[
+    {
+        "id": 0,
+        "processing_time": 0.016
+    },
+    {
+        "id": 1,
+        "processing_time": 0.007
+    },
+    {
+        "distances": [
+            {
+                "approx_shortest_distance": 0.0,
+                "source": 43,
+                "target": 27
+            },
+            {
+                "approx_shortest_distance": 0.0,
+                "source": 36,
+                "target": 85
+            },
+            {
+                "approx_shortest_distance": 549.5200805664063,
+                "source": 30,
+                "target": 92
+            },
+            {
+                "approx_shortest_distance": 137.10000610351563,
+                "source": 44,
+                "target": 57
+            }
+        ],
+        "id": 2,
+        "processing_time": 0.018
+    }
+]

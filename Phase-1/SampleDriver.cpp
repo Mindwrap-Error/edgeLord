@@ -1,4 +1,4 @@
-#include <nlohmann/json.hpp>
+// #include <nlohmann/json.hpp>
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -21,11 +21,13 @@ int main(int argc, char* argv[]) {
         Add your graph reading and processing code here
         Initialize any classes and data structures needed for query processing
     */
+    
     std::ifstream graph_file(argv[1]);
     if (!graph_file.is_open()) {
         std::cerr << "Failed to open " << argv[2] << std::endl;
         return 1;
     }
+    
     json graph_json;
     graph_file >> graph_json;
     Graph graph;
@@ -53,7 +55,7 @@ int main(int argc, char* argv[]) {
 
         // Answer each query replacing the function process_query using 
         // whatever function or class methods that you have implemented
-        json result = process_query(query);
+        json result = graph.process_query(query);
 
         auto end_time = std::chrono::high_resolution_clock::now();
         result["processing_time"] = std::chrono::duration<double, std::milli>(end_time - start_time).count();

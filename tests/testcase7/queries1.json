@@ -1,0 +1,88 @@
+{
+  "meta": {
+    "id": "qset_phase1"
+  },
+  "events": [
+    {
+      "type": "shortest_path",
+      "id": 1,
+      "source": 526,
+      "target": 2127,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 2,
+      "source": 6041,
+      "target": 4543,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 3,
+      "source": 10881,
+      "target": 8875,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 4,
+      "source": 12697,
+      "target": 10235,
+      "mode": "time"
+    },
+    {
+      "type": "shortest_path",
+      "id": 5,
+      "source": 5166,
+      "target": 5433,
+      "mode": "time"
+    },
+    {
+      "type": "knn",
+      "id": 6,
+      "poi": "hospital",
+      "query_point": {
+        "lat": 42.35043834997026,
+        "lon": -71.12745817056572
+      },
+      "k": 8,
+      "metric": "euclidean"
+    },
+    {
+      "type": "knn",
+      "id": 7,
+      "poi": "pharmacy",
+      "query_point": {
+        "lat": 42.30494865170586,
+        "lon": -71.08058079311219
+      },
+      "k": 7,
+      "metric": "euclidean"
+    },
+    {
+      "type": "knn",
+      "id": 8,
+      "poi": "pharmacy",
+      "query_point": {
+        "lat": 42.381673805401306,
+        "lon": -71.09327700937294
+      },
+      "k": 6,
+      "metric": "euclidean"
+    },
+    {
+      "type": "remove_edge",
+      "id": 9,
+      "edge_id": 27192
+    },
+    {
+      "type": "modify_edge",
+      "id": 10,
+      "edge_id": 6362,
+      "patch": {
+        "length": 100.14
+      }
+    }
+  ]
+}
