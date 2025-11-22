@@ -380,6 +380,69 @@ json Graph::k_shortest_paths_exact(const json& query,json& response)
 
     return response;
 }
+struct Candidate {
+    vector<int> path;
+    double length;
+    unordered_set<int> edges; //for fast checking of overlap its needed
+};
+
+//calculate penalty for a specific group of indices
+double calculate_group_score(const vector<int>& group_indices, const vector<Candidate>& candidates, double optimal_dist, double threshold) {
+    double total_pen = 0;
+    for(int i : group_indices) {
+        const auto& curr = candidates[i];
+        
+        //dist penalty
+        double dist_pen = ((curr.length-optimal_dist)/optimal_dist) + 0.1;
+
+        //overlap Penalty
+        int overlap_pen = 1; //as same index always overlaps
+        for(int other_i : group_indices) {
+            int common = 0;
+            if(i == other_i) continue;
+            const auto* s1 = &curr.edges;
+            const auto* s2 = &candidates[other_i].edges;
+            if(s1->size() > s2->size()) swap(s1, s2);
+
+            for(int eid : *s1) {
+                if(s2->count(eid)) common++;
+            }
+            
+            double overlap_pct = 0;
+            if(!curr.edges.empty()) overlap_pct = (double)common/curr.edges.size();
+            if(overlap_pct > threshold) overlap_pen++;
+        }
+        total_pen += (dist_pen*overlap_pen);
+    }
+    return total_pen;
+}
+
+
+void find_best_subset(int k,size_t curr_ind,vector<int>& current_group,const vector<Candidate>& candidates,double optimal_dist,double threshold,double& global_min_score,vector<int>& best_group_indices) {
+
+    //when there are k elements
+    if (current_group.size() == k) {
+        double score = calculate_group_score(current_group,candidates, optimal_dist,threshold);
+        if (score < global_min_score) {
+            global_min_score = score;
+            best_group_indices = current_group;
+        }
+        return;
+    }
+
+    //when enough candidates are not there
+    int needed = k - current_group.size();
+    int left = candidates.size() - curr_ind;
+    if(left<needed) return;
+
+    //include current 
+    current_group.push_back(curr_ind);
+    find_best_subset(k, curr_ind+1, current_group, candidates, optimal_dist, threshold, global_min_score, best_group_indices);
+    current_group.pop_back(); //for backtracking in recursion
+
+    //exclude current
+    find_best_subset(k, curr_ind + 1, current_group, candidates, optimal_dist, threshold, global_min_score, best_group_indices);
+}
 
 json Graph::k_shortest_paths_heuristic(const json& query,json& response)
 {
@@ -409,6 +472,7 @@ json Graph::k_shortest_paths_heuristic(const json& query,json& response)
         return ans;
     };
 
+    //we need this for calculating the original distance
     auto calculate_real_distance = [&](const vector<int>& path, const map<int, double>& modifs) -> double {
         double dist = 0;
         for (size_t i=0;i<path.size()-1;i++) {
@@ -421,17 +485,12 @@ json Graph::k_shortest_paths_heuristic(const json& query,json& response)
         return dist;
     };
 
-    struct Candidate {
-        vector<int> path;
-        double length;
-        unordered_set<int> edges; //needed to check overlap quickly
-    };
     vector<Candidate> candidates; //store candidate paths to choose from
 
     map<int, double> orig_len; //map from edgeid to original length
 
     vector<bool> forbidden_nodes(num_nodes,false);
-    vector<bool> not_forbidden_types(5, true); //all allowed
+    vector<bool> not_forbidden_types(5, true); //all allowed in this
 
     auto [dist, parents] = dijkstra(source,mode,forbidden_nodes,not_forbidden_types);
 
@@ -512,60 +571,16 @@ json Graph::k_shortest_paths_heuristic(const json& query,json& response)
         edges.at(eid).len = original_len;
     }
 
-    //we will now select the best k path based on penalty scores
-    vector<int> selected = {0}; //shortest path always
-
-    while(selected.size()<k && selected.size()<candidates.size()) {
-        int best_ind = -1;
-        double min_score = DBL_MAX;
-
-        for(size_t i=1;i<candidates.size();i++) {
-            bool present = false;
-            for(int s : selected) if(s == (int)i) present = true;
-            if(present) continue;
-
-            //what if we added i
-            vector<int> test_group = selected;
-            test_group.push_back(i);
-            
-            double total_pen = 0;
-            if(best_ind == -1) best_ind = i;
-            // Sum penalties for every path in this hypothetical group
-            for(int ind : test_group) {
-                const auto& curr = candidates[ind];
-                
-                //distance penalty
-                double dist_pen = ((curr.length-optimal_dist)/optimal_dist) + 0.1;
-
-                //we calculate overall penlty as given in statement
-                int overlap_pen = 0;
-                for(int ind1 : test_group) {
-                    int common = 0;
-                    for(int eid : curr.edges) { //here we include itself as given
-                        if(candidates[ind1].edges.count(eid)) common++; //if present in both
-                    }
-                    
-                    double total_overlap = 0;
-                    if(!curr.edges.empty()) total_overlap = (double)common/curr.edges.size();
-                    if(total_overlap > OVERLAP_THRESHOLD) overlap_pen++;
-                }
-
-                total_pen += (dist_pen*overlap_pen);
-            }
-
-            if(total_pen<min_score) { //here we minimize total penalty as required
-                min_score = total_pen;
-                best_ind = i;
-            }
-        }
-
-        if(best_ind != -1) selected.push_back(best_ind);
-        else break;
-    }
-
+    //we will now select the best k path based on total penalty scores
+    //here we do brute force as k is very small
+    vector<int> best_group_indices;
+    double minscore = DBL_MAX;
+    vector<int> initial_group = {0}; 
+    //we start looking from index 1
+    find_best_subset(k,1,initial_group,candidates,optimal_dist,OVERLAP_THRESHOLD,minscore,best_group_indices);
     //get all final candidates
     vector<Candidate> valid_cand;
-    for(int idx : selected) valid_cand.push_back(candidates[idx]);
+    for(int idx : best_group_indices) valid_cand.push_back(candidates[idx]);
 
     //sort by using custom comparator (which is order of length)
     sort(valid_cand.begin(), valid_cand.end(), [](const Candidate& a, const Candidate& b){
