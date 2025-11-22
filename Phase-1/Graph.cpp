@@ -1,6 +1,12 @@
 #include "Graph.hpp"
-using namespace std;
 using json = nlohmann::json;
+using std::string;
+using std::vector;
+using std::pair;
+using std::priority_queue;
+using std::greater;
+using std::map;
+
 
 int type_to_int(string& s){
     int type=-1;
@@ -63,6 +69,7 @@ void Edge::from_json(json& j,Edge& e){
 void Graph::from_json(const json& j,Graph& g){
     g.num_nodes = j["meta"]["nodes"].get<int>();
     int o = g.num_nodes;
+    g.graphpois.resize(6);
     
     for(auto x : j.at("nodes")){
         Node l;
@@ -70,7 +77,6 @@ void Graph::from_json(const json& j,Graph& g){
         g.nodes.push_back(l);
     }
     
-    //should we resize and use [] instead of push_back
     g.adjlist.resize(o);
 
     for(auto y : j.at("edges")){
@@ -81,6 +87,12 @@ void Graph::from_json(const json& j,Graph& g){
         if(!e.oneway) g.adjlist[e.node2].push_back({e.node1,e.edge_id});
     }
     
+    for(int i = 0; i < o;i++){
+        for(int j = 0;j < 6;j++){
+            if(g.nodes[i].pois[j]) g.graphpois[j].push_back(i);
+        }
+    }
+
     // cerr << "graph initialized" << endl;
     return;
 }
@@ -269,13 +281,12 @@ json Graph::shortest_path(const json& q3,json& answer){
 
     string mode = q3.at("mode").get<string>(); // "time" or "distance"
 
-    //vector<int> forbidden_nodes; // iski jagah array of bools banana ho toh wo bhi ban jayega
     vector<bool> forbidden_nodes(num_nodes, false);
     vector<bool> not_forbidden_types(5, true);// true == not forbidden and false == forbidden
 
     bool no_constraints = false;// true if no constraints
 
-    //ignore
+
     if(!q3.contains("constraints")){
         no_constraints = true;
     }
@@ -361,16 +372,10 @@ json Graph::knn(const json& q4,json& answer){
     //store final nodes in this vector
     vector<int> final_nodes;
 
-    //change variable for max_heap please//////////////////////////
     priority_queue<pair<double, int>> max_heap; //for k-nearest
 
     
-    vector<int> poi_nodes; //stores all nodes which have the poi needed
-    for(int i = 0; i < num_nodes; i++) {
-        if(nodes[i].pois[req_poi]) {
-            poi_nodes.push_back(i);
-        }
-    }
+    vector<int> poi_nodes = graphpois[req_poi]; //stores all nodes which have the poi needed
 
     if (metric==0) {//euclidean
         for (int node : poi_nodes) {
@@ -422,7 +427,6 @@ json Graph::knn(const json& q4,json& answer){
     return answer;
 }
 
-// static int x = 1;
 
 json Graph::process_query(const json& query,json& answer){
     // cerr << x++ << endl;

@@ -1,12 +1,19 @@
-#include <bits/stdc++.h>
 #include<iostream>
-#include "json.hpp"
-using namespace std;
-#include <limits>       // For DBL_MAX
+#include <nlohmann/json.hpp>
+#include <cfloat>       // For DBL_MAX
 #include <cmath>        // For _euclidean_dist_sq
-#include <unordered_set> // For forbidden nodes
-// these need to be included if we remove bits/stdc++.h
+#include <unordered_set>
+#include <vector>
+#include <queue>
+#include<string>
+#include<map>
 using json = nlohmann::json;
+using std::string;
+using std::vector;
+using std::pair;
+using std::priority_queue;
+using std::greater;
+using std::map;
 
 int type_to_int(string& s);
 int poi_to_int(string& s);
@@ -40,6 +47,7 @@ class Graph{
     int num_nodes;
     vector<Node> nodes;
     map<int,Edge> edges;// edge_id -> edge
+    vector<vector<int>> graphpois;
     vector<vector<pair<int,int>>> adjlist;
     //adjlist[node1_id] = {{node2,edge_id},...}
     

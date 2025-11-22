@@ -1,4 +1,4 @@
-// #include <nlohmann/json.hpp>
+#include <nlohmann/json.hpp>
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -58,7 +58,11 @@ int main(int argc, char* argv[]) {
         // Answer each query replacing the function process_query using 
         // whatever function or class methods that you have implemented
         json result;
+        try{
         graph.process_query(query,result);
+        } catch(...){
+            result["id"] = query.at("id").get<string>();
+        }
 
         auto end_time = std::chrono::high_resolution_clock::now();
         result["processing_time"] = std::chrono::duration<double, std::milli>(end_time - start_time).count();

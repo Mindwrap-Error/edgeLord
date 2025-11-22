@@ -8,8 +8,6 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # --- 1. Create a temporary Python script for smart comparison ---
-# Note: The Python code inside EOF must be valid Python. 
-# It is kept flush left here to ensure no IndentationErrors occur.
 cat << 'EOF' > temp_compare.py
 import json
 import sys
@@ -59,7 +57,7 @@ def compare_json(file1, file2):
                 f1_val = float(val1)
                 f2_val = float(val2)
                 
-                # Tolerance set to 1.0
+                # UPDATED: Tolerance set to 1.0 as requested
                 if abs(f1_val - f2_val) > 1.0:
                     print(f"  [ID {id_val}] Cost mismatch")
                     print(f"      Yours: {f1_val}")
@@ -99,38 +97,51 @@ if __name__ == "__main__":
     compare_json(sys.argv[1], sys.argv[2])
 EOF
 
-# --- 2. Start the Test ---
+# --- 2. Start the Test Batch ---
 
-# Hardcoded paths for single file testing
-GRAPH="./graph.json"
-QUERIES="./query.json" # Ensure this matches your actual filename (queries.json or query.json)
-MY_OUTPUT="./out.json"
-EXPECTED_OUTPUT="./expected_out.json"
+echo -e "${CYAN}Starting Test Batch...${NC}\n"
 
-echo -e "${CYAN}Starting Test...${NC}\n"
-
-# Execute the binary
-# Assuming your binary is named 'a.out' and accepts 3 args
-./a.out "$GRAPH" "$QUERIES" "$MY_OUTPUT"
-
-# Compare outputs
-echo -e "Comparing Test Case..."
-
-if [ -f "$EXPECTED_OUTPUT" ]; then
-    # Run the python comparator
-    DIFFERENCES=$(python3 temp_compare.py "$MY_OUTPUT" "$EXPECTED_OUTPUT")
+# Loop from 0 to 9
+for i in {0..9}
+do
+    # Define file paths
+    GRAPH="./../tests/testcase$i/graph.json"
+    QUERIES="./../tests/testcase$i/queries1.json"
     
-    if [ -z "$DIFFERENCES" ]; then
-        echo -e "${GREEN}Test Case Passed!${NC}"
-    else
-        echo -e "${RED}Differences found in Test Case:${NC}"
-        echo "$DIFFERENCES"
-    fi
-else
-    echo -e "${YELLOW}Warning: Expected result file not found at $EXPECTED_OUTPUT${NC}"
-fi
+    OUT_DIR="./../myresults/testcase$i"
+    MY_OUTPUT="$OUT_DIR/output1.json"
+    
+    # Assuming output.json
+    EXPECTED_OUTPUT="./../results/testcase$i/output1.json"
 
-echo -e "${CYAN}=== End of Test Case ===${NC}\n"
+    # Create directory if it doesn't exist
+    if [ ! -d "$OUT_DIR" ]; then
+        mkdir -p "$OUT_DIR"
+    fi
+
+    # Execute the binary
+    ./phase1 "$GRAPH" "$QUERIES" "$MY_OUTPUT" > /dev/null
+
+    # Compare outputs
+    echo -e "Comparing Test Case $i..."
+    
+    if [ -f "$EXPECTED_OUTPUT" ]; then
+        # Run the python comparator
+        DIFFERENCES=$(python3 temp_compare.py "$MY_OUTPUT" "$EXPECTED_OUTPUT")
+        
+        if [ -z "$DIFFERENCES" ]; then
+            echo -e "${GREEN}Test Case $i Passed!${NC}"
+        else
+            echo -e "${RED}Differences found in Test Case $i:${NC}"
+            echo "$DIFFERENCES"
+        fi
+    else
+        echo -e "${YELLOW}Warning: Expected result file not found at $EXPECTED_OUTPUT${NC}"
+    fi
+
+    echo -e "${CYAN}=== End of Test Case $i ===${NC}\n"
+
+done
 
 # Clean up
 rm temp_compare.py
