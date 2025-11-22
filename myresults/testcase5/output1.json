@@ -6,7 +6,7 @@
         {
             "id": 1,
             "possible": false,
-            "processing_time": 8.512262
+            "processing_time": 4.900911
         },
         {
             "id": 2,
@@ -124,7 +124,7 @@
                 6980
             ],
             "possible": true,
-            "processing_time": 8.214064
+            "processing_time": 4.231251
         },
         {
             "id": 3,
@@ -200,7 +200,7 @@
                 3015
             ],
             "possible": true,
-            "processing_time": 7.866967
+            "processing_time": 3.277105
         },
         {
             "id": 4,
@@ -254,7 +254,7 @@
                 7296
             ],
             "possible": true,
-            "processing_time": 7.354908
+            "processing_time": 3.358517
         },
         {
             "id": 5,
@@ -376,7 +376,7 @@
                 1738
             ],
             "possible": true,
-            "processing_time": 7.394214
+            "processing_time": 3.265326
         },
         {
             "id": 6,
@@ -388,7 +388,7 @@
                 2959,
                 277
             ],
-            "processing_time": 0.013536
+            "processing_time": 0.006983
         },
         {
             "id": 7,
@@ -398,7 +398,7 @@
                 1639,
                 5427
             ],
-            "processing_time": 0.046378
+            "processing_time": 0.01505
         },
         {
             "id": 8,
@@ -414,17 +414,17 @@
                 97,
                 99
             ],
-            "processing_time": 7.38231
+            "processing_time": 3.212246
         },
         {
             "done": true,
             "id": 9,
-            "processing_time": 0.004829
+            "processing_time": 0.002415
         },
         {
             "done": true,
             "id": 10,
-            "processing_time": 0.007984
+            "processing_time": 0.003625
         }
     ]
 }

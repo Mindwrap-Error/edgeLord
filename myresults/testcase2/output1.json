@@ -6,7 +6,7 @@
         {
             "id": 1,
             "possible": false,
-            "processing_time": 0.017711
+            "processing_time": 0.012923
         },
         {
             "id": 2,
@@ -41,7 +41,7 @@
                 113
             ],
             "possible": true,
-            "processing_time": 0.145324
+            "processing_time": 0.079968
         },
         {
             "id": 3,
@@ -61,17 +61,17 @@
                 125
             ],
             "possible": true,
-            "processing_time": 0.141663
+            "processing_time": 0.071507
         },
         {
             "id": 4,
             "possible": false,
-            "processing_time": 0.007519
+            "processing_time": 0.003489
         },
         {
             "id": 5,
             "possible": false,
-            "processing_time": 0.008213
+            "processing_time": 0.004129
         },
         {
             "id": 6,
@@ -79,7 +79,7 @@
                 30,
                 6
             ],
-            "processing_time": 0.006722
+            "processing_time": 0.005559
         },
         {
             "id": 7,
@@ -91,7 +91,7 @@
                 64,
                 180
             ],
-            "processing_time": 0.144749
+            "processing_time": 0.06296
         },
         {
             "id": 8,
@@ -100,17 +100,17 @@
                 70,
                 45
             ],
-            "processing_time": 0.144429
+            "processing_time": 0.059492
         },
         {
             "done": true,
             "id": 9,
-            "processing_time": 0.003309
+            "processing_time": 0.001756
         },
         {
             "done": true,
             "id": 10,
-            "processing_time": 0.005058
+            "processing_time": 0.003198
         }
     ]
 }

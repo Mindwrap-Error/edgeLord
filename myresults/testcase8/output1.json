@@ -6,7 +6,7 @@
         {
             "id": 1,
             "possible": false,
-            "processing_time": 12.316641
+            "processing_time": 8.435107
         },
         {
             "id": 2,
@@ -90,7 +90,7 @@
                 6520
             ],
             "possible": true,
-            "processing_time": 15.973855
+            "processing_time": 8.676485
         },
         {
             "id": 3,
@@ -110,7 +110,7 @@
                 2327
             ],
             "possible": true,
-            "processing_time": 14.187315
+            "processing_time": 7.269271
         },
         {
             "id": 4,
@@ -187,7 +187,7 @@
                 9476
             ],
             "possible": true,
-            "processing_time": 14.375451
+            "processing_time": 7.374419
         },
         {
             "id": 5,
@@ -339,7 +339,7 @@
                 5420
             ],
             "possible": true,
-            "processing_time": 15.206544
+            "processing_time": 7.781607
         },
         {
             "id": 6,
@@ -355,12 +355,12 @@
                 5607,
                 2807
             ],
-            "processing_time": 14.210804
+            "processing_time": 7.078606
         },
         {
             "id": 7,
             "nodes": [],
-            "processing_time": 14.383708
+            "processing_time": 6.848935
         },
         {
             "id": 8,
@@ -373,17 +373,17 @@
                 2627,
                 7218
             ],
-            "processing_time": 0.043164
+            "processing_time": 0.010241
         },
         {
             "done": true,
             "id": 9,
-            "processing_time": 0.005134
+            "processing_time": 0.002142
         },
         {
             "done": true,
             "id": 10,
-            "processing_time": 0.007745
+            "processing_time": 0.003102
         }
     ]
 }

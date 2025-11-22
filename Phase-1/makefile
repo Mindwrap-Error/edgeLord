@@ -1,6 +1,6 @@
 # Compiler and Flags
 CXX      := g++
-CXXFLAGS := -std=c++17 -Wall -Wextra -Iinclude
+CXXFLAGS := -std=c++17 -O3 -march=native -flto -funroll-loops -Wall -Wextra -Iinclude
 TARGET   := phase1
 
 # Source and Object Files

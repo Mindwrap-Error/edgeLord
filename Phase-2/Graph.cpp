@@ -1,6 +1,12 @@
 #include "Graph.hpp"
-using namespace std;
 using json = nlohmann::json;
+using std::string;
+using std::vector;
+using std::pair;
+using std::priority_queue;
+using std::greater;
+using std::map;
+using std::unordered_set;
 
 int type_to_int(string& s){
     int type=-1;
@@ -86,138 +92,7 @@ void Graph::from_json(const json& j,Graph& g){
     return;
 }
 
-//ret false if edge dne or edge alr disabled
-json Graph::remove_edge(const json& q1){
-    int id_rem = q1.at("edge_id").get<int>();
-    json answer;
-    answer["id"] = q1.at("id").get<int>();
 
-    if (edges.find(id_rem) == edges.end()) { //is there edge which we need to remove
-        answer["done"] = false;
-        return answer;
-    }
-    if (edges[id_rem].disabled) {
-        answer["done"] = false;
-    } else {
-        edges[id_rem].disabled = true;
-        answer["done"] = true;
-    }
-    
-    return answer;
-};
-
-json Graph::mod_edge(const json& q2){
-    int mod_id = q2.at("edge_id");// id of edge to be modified
-
-    // the following variables tell what has been modified and what has not been modified
-    bool mod_len = true; // true if length has been modified and false if not
-    bool mod_avg_time = true;
-    bool mod_spd_profile = true;
-    bool mod_type = true;
-
-    //only come into play if the corresponding mod varialble is true;
-    double new_len;
-    double new_avg_time;
-    vector<double> new_spd_profile;
-    int new_type;
-
-
-    try{
-        new_len = q2["patch"].at("length").get<double>();
-    } catch(std::out_of_range){
-        mod_len = false;
-    }
-    try{
-        new_avg_time = q2["patch"].at("average_time").get<double>();
-    } catch(std::out_of_range){
-        mod_avg_time = false;
-    }
-    try{
-        string s = q2["patch"].at("type").get<string>();
-        new_type = type_to_int(s);
-    } catch(std::out_of_range){
-        mod_type = false;
-    }
-    try{
-        auto k = q2["patch"].at("speed_profile");
-        for(auto l : k){
-            new_spd_profile.push_back(l.get<double>());
-        }
-    } catch(std::out_of_range){
-        mod_spd_profile = false;
-    }
-        
-    json answer;
-    answer["id"] = q2.at("id").get<int>();
-
-    if (edges.find(mod_id) == edges.end()) {
-        answer["done"] = false; //edge not found
-        return answer;
-    }
-
-    Edge& mod_edge = edges.find(mod_id)->second;
-    bool changed = mod_len || mod_avg_time || mod_spd_profile || mod_type;
-
-    
-    if (mod_edge.disabled) { //first enable the edge if disabled
-        mod_edge.disabled = false; 
-        answer["done"] = true;
-    } else {
-        if (!changed) {
-            answer["done"] = false; //ret false if we not changing anything at all
-        } else {
-            answer["done"] = true;
-        }
-    }
-    if (changed && !answer["done"]) { // modify respectively
-        if (mod_len) mod_edge.len = new_len;
-        if (mod_avg_time) mod_edge.avg_time = new_avg_time;
-        if (mod_type) mod_edge.type = new_type;
-        if (mod_spd_profile) mod_edge.spd_profile = new_spd_profile;
-    }
-    return answer;
-};
-
-
-double Graph::calc_timecost(const Edge& edge, double T_arrival) {
-    // T_arrival is in seconds and could be more than a day
-    int days = T_arrival / 86400.0;
-    T_arrival = T_arrival - 86400.0*days;
-    //if no speed profile
-    if (edge.spd_profile.empty()) {
-        return edge.avg_time;
-    }
-
-    double remains = edge.len;
-    double ans = 0.0;
-
-
-    int slot = ((int) T_arrival/900 )% 24;
-    double dist_in_first_slot = edge.spd_profile[slot] * ((1+slot)*900.0-T_arrival);
-    if(remains <= dist_in_first_slot){
-        return remains/edge.spd_profile[slot];
-    }
-    else{
-        remains -= dist_in_first_slot;
-        ans += 900.0;
-        slot = (slot + 1)%24;
-    }
-
-    while(true){
-        double dist_in_this_slot = edge.spd_profile[slot] * 900.0;
-        if(remains > dist_in_this_slot){
-            remains -= dist_in_this_slot;
-            ans+=900.0;
-            slot = (slot+1)%24;
-            continue;
-        } else{
-            ans += remains / edge.spd_profile[slot];
-            remains = 0;
-            break;
-        }
-    }
-    return ans;
-}
 
 pair<vector<double>, vector<int>> Graph::dijkstra(int source, const string& mode, const vector<bool>& forbidden_nodes, const vector<bool>& not_forbidden_types) {
     vector<double> dist(num_nodes,DBL_MAX);
@@ -246,8 +121,7 @@ pair<vector<double>, vector<int>> Graph::dijkstra(int source, const string& mode
             if (forbidden_nodes[v]) continue;
 
             double edge_cost;
-            if (mode == "distance") edge_cost = edge.len;
-            else edge_cost = calc_timecost(edge,dist[u]);
+            edge_cost = edge.len;
             if (edge_cost == DBL_MAX) continue;
 
             //dijkstra logic
@@ -327,177 +201,7 @@ double Graph::weighted_Astar(int source, int target, double w)
     return DBL_MAX; //path not found
 }
 
-json Graph::shortest_path(const  json& q3){
 
-    int source = q3.at("source").get<int>();
-    int target = q3.at("target").get<int>();
-
-    string mode = q3.at("mode").get<string>(); // "time" or "distance"
-
-    //vector<int> forbidden_nodes; // iski jagah array of bools banana ho toh wo bhi ban jayega
-    vector<bool> forbidden_nodes(num_nodes, false);
-    vector<bool> not_forbidden_types(5, true);// true == not forbidden and false == forbidden
-
-    bool no_constraints = false;// true if no constraints
-
-    //ignore
-    try{
-        q3.at("constraints");
-    } catch(std::out_of_range){
-        no_constraints = true;
-    }
-
-    //similar to no_constrains variable
-    bool no_nodes_forbidden = false;
-    bool no_types_forbidden = false;
-
-    //ignore
-    if(!no_constraints){
-        try{
-            auto x  = q3["constraints"].at("forbidden_road_types");
-            for(auto k : x){
-                string s = k.get<string>();
-                not_forbidden_types[type_to_int(s)];
-            }
-        } catch(std::out_of_range){
-            no_types_forbidden = true;
-        }
-        try{
-            auto y = q3["constraints"].at("forbidden_nodes");
-            for(auto l : y){
-                forbidden_nodes[l.get<int>()] = true; 
-            }
-        } catch(std::out_of_range){
-            no_nodes_forbidden = true;
-        }
-    }
-
-    //final path in this vector
-    vector<int> final_path;
-
-    // this varible set to false if no path exists
-    bool possible = true;
-
-    //mintime/dist -> this set to minimum time or distance as asked by mode
-    double mincost;
-
-    auto [dist, parent] = dijkstra(source, mode, forbidden_nodes, not_forbidden_types);
-
-    if (dist[target] == DBL_MAX) {
-        possible = false;
-    } else {
-        possible = true;
-        mincost = dist[target];
-
-        int tmp = target;
-        while(tmp != -1) {
-            final_path.push_back(tmp);
-            tmp = parent[tmp];
-        }
-        reverse(final_path.begin(),final_path.end());
-    }
-
-    json answer; //store in and return the answer
-    answer["id"] = q3.at("id").get<int>();
-    answer["possible"] = possible;
-
-    if(possible){
-        answer["path"] = final_path;
-        answer["minumum_time/minimum_distance"] = mincost;
-    }
-    return answer;
-
-}
-
-json Graph::knn(const json& q4){
-
-    string s = q4.at("poi").get<string>();
-    int req_poi = poi_to_int(s);
-
-    //query point latitude and longitude
-    double qp_lat = q4.at("query_point").at("lat").get<double>();
-    double qp_lon = q4.at("query_point").at("lon").get<double>();
-    
-    //k
-    int k = q4.at("k").get<int>();
-
-    int metric;// = 0->euclidian 1-> shortest path
-    s = q4.at("metric").get<string>();
-    if(s == "euclidean") metric = 0;
-    else if(s == "shortest_path") metric = 1;
-
-    //store final nodes in this vector
-    vector<int> final_nodes;
-
-    //change variable for max_heap please//////////////////////////
-    priority_queue<pair<double, int>> max_heap; //for k-nearest
-
-    
-    vector<int> poi_nodes; //stores all nodes which have the poi needed
-    for(int i = 0; i < num_nodes; i++) {
-        if(nodes[i].pois[req_poi]) {
-            poi_nodes.push_back(i);
-        }
-    }
-
-    if (metric==0) {//euclidean
-        for (int node : poi_nodes) {
-            double d = (qp_lat-nodes[node].lat) * (qp_lat-nodes[node].lat) + (qp_lon-nodes[node].lon) * (qp_lon-nodes[node].lon);
-            max_heap.push({d,node});
-            if (max_heap.size() > k) {
-                max_heap.pop();
-            }
-        }
-    } else {//shortest path
-        int nearest_node = -1;
-        double min_dist_sq = DBL_MAX;
-        for (int i = 0; i < num_nodes; ++i) {
-            double d = (qp_lat-nodes[i].lat) * (qp_lat-nodes[i].lat) + (qp_lon-nodes[i].lon) * (qp_lon-nodes[i].lon);
-            if (d < min_dist_sq) {
-                min_dist_sq = d;
-                nearest_node = i;
-            }
-        }
-
-        //run dijkstra from this node now
-        if (nearest_node != -1) {
-            vector<bool> forbidden_nodes(num_nodes, false);
-            vector<bool> not_forbidden_types(5, true);
-            //we use distance as metric in this 
-            auto [dist, parent] = dijkstra(nearest_node, "distance", forbidden_nodes, not_forbidden_types);
-
-            //best k nodes are selected
-            for (int poi_node : poi_nodes) {
-                double d = dist[poi_node];
-                if (d != DBL_MAX) { //if reachable
-                    max_heap.push({d, poi_node});
-                    if (max_heap.size() > k) max_heap.pop();
-                }
-            }
-        }
-    }
-    //extract and store in final_nodes
-    while(!max_heap.empty()) {
-        final_nodes.push_back(max_heap.top().second);
-        max_heap.pop();
-    }
-
-    //update answer
-    json answer;
-    answer["id"] = q4.at("id").get<int>();
-    answer["nodes"] = final_nodes;
-
-    return answer;
-}
-
-json Graph::process_query(const json& query){
-    string s = query.at("type").get<string>();
-    if (s == "knn") return knn(query);
-    else if(s == "shortest_path") return shortest_path(query);
-    else if(s == "modify_edge") return mod_edge(query);
-    else if(s == "remove_edge") return remove_edge(query);
-
-}
 
 vector<int> Graph::reconstruct_path(int source, int target, const vector<int>& parent)
 {
@@ -898,4 +602,10 @@ json Graph::approx_shortest_path(const json& query)
     }
     response["distances"] = distances;
     return response;
+}
+
+
+
+json Graph::process_query(const json& query){
+    string s = query.at("type").get<string>();
 }

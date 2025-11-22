@@ -1,12 +1,19 @@
-#include <bits/stdc++.h>
 #include<iostream>
-#include "json.hpp"
-using namespace std;
-#include <limits>       // For DBL_MAX
+#include <nlohmann/json.hpp>
+#include <cfloat>       // For DBL_MAX
 #include <cmath>        // For _euclidean_dist_sq
-#include <unordered_set> // For forbidden nodes
-// these need to be included if we remove bits/stdc++.h
+#include <unordered_set>
+#include <vector>
+#include <queue>
+#include<string>
+#include<map>
 using json = nlohmann::json;
+using std::string;
+using std::vector;
+using std::pair;
+using std::priority_queue;
+using std::greater;
+using std::map;
 
 int type_to_int(string& s);
 int poi_to_int(string& s);
@@ -45,16 +52,6 @@ class Graph{
     
     static void from_json(const json& j, Graph& g);
 
-    json remove_edge(const json& q1);
-
-    json mod_edge(const json& q2);
-
-    json shortest_path(const json& q3);
-
-    json knn(const json& q4);
-
-    json process_query(const json& query);
-
     json k_shortest_paths_exact(const json& query);
 
     json k_shortest_paths_heuristic(const json& query);
@@ -64,8 +61,6 @@ class Graph{
     private:
     //dijkstra
     pair<vector<double>, vector<int>> dijkstra(int source, const string& mode, const vector<bool>&forbidden_nodes, const vector<bool>& not_forbidden_types);
-    //helper function for dijkstra
-    double calc_timecost(const Edge& edge, double T_arrival);
 
     vector<int> reconstruct_path(int source, int target, const vector<int>& parent);
 
@@ -76,4 +71,6 @@ class Graph{
     double heuristic (int u, int target);
 
     double weighted_Astar(int source, int target, double w);
+
+    json process_query(const json& query);
 };

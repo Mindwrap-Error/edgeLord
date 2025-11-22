@@ -193,7 +193,7 @@
                 12580
             ],
             "possible": true,
-            "processing_time": 33.346764
+            "processing_time": 16.617344
         },
         {
             "id": 2,
@@ -299,7 +299,7 @@
                 2807
             ],
             "possible": true,
-            "processing_time": 31.216528
+            "processing_time": 13.545452
         },
         {
             "id": 3,
@@ -551,7 +551,7 @@
                 18648
             ],
             "possible": true,
-            "processing_time": 30.129126
+            "processing_time": 13.572936
         },
         {
             "id": 4,
@@ -627,7 +627,7 @@
                 3502
             ],
             "possible": true,
-            "processing_time": 27.887353
+            "processing_time": 10.566223
         },
         {
             "id": 5,
@@ -779,12 +779,12 @@
                 17392
             ],
             "possible": true,
-            "processing_time": 31.709185
+            "processing_time": 11.516447
         },
         {
             "id": 6,
             "nodes": [],
-            "processing_time": 0.007594
+            "processing_time": 0.004515
         },
         {
             "id": 7,
@@ -799,7 +799,7 @@
                 3332,
                 10739
             ],
-            "processing_time": 28.167989
+            "processing_time": 10.316224
         },
         {
             "id": 8,
@@ -814,17 +814,17 @@
                 22413,
                 17786
             ],
-            "processing_time": 28.183179
+            "processing_time": 9.758504
         },
         {
             "done": true,
             "id": 9,
-            "processing_time": 0.006247
+            "processing_time": 0.002585
         },
         {
             "done": true,
             "id": 10,
-            "processing_time": 0.011662
+            "processing_time": 0.003578
         }
     ]
 }
