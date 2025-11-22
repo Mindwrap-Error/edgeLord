@@ -1,0 +1,33 @@
+{
+    "meta": {
+        "id": "qset_phase2"
+    },
+    "results": [
+        {
+            "id": 0,
+            "paths": [],
+            "processing_time": 0.006025
+        },
+        {
+            "id": 1,
+            "paths": [],
+            "processing_time": 0.003729
+        },
+        {
+            "distances": [
+                {
+                    "approx_shortest_distance": 549.52,
+                    "source": 30,
+                    "target": 92
+                },
+                {
+                    "approx_shortest_distance": 137.1,
+                    "source": 44,
+                    "target": 57
+                }
+            ],
+            "id": 2,
+            "processing_time": 0.036431
+        }
+    ]
+}

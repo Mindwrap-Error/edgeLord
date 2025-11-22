@@ -1,4 +1,7 @@
-[
+{"meta": {
+        "id": "qset_phase2"
+    },
+"results": [
     {
         "id": 0,
         "paths": [
@@ -247,4 +250,4 @@
         "id": 2,
         "processing_time": 0.066
     }
-]
+]}

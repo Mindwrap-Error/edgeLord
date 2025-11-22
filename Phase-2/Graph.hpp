@@ -52,11 +52,13 @@ class Graph{
     
     static void from_json(const json& j, Graph& g);
 
-    json k_shortest_paths_exact(const json& query);
+    json k_shortest_paths_exact(const json& query,json& answer);
 
-    json k_shortest_paths_heuristic(const json& query);
+    json k_shortest_paths_heuristic(const json& query,json& answer);
 
-    json approx_shortest_path(const json& query);
+    json approx_shortest_path(const json& query,json& answer);
+
+    json process_query(const json& query,json& answer);
 
     private:
     //dijkstra
@@ -72,5 +74,5 @@ class Graph{
 
     double weighted_Astar(int source, int target, double w);
 
-    json process_query(const json& query);
+    
 };

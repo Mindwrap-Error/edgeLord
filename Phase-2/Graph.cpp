@@ -88,7 +88,7 @@ void Graph::from_json(const json& j,Graph& g){
         if(!e.oneway) g.adjlist[e.node2].push_back({e.node1,e.edge_id});
     }
     
-    // cerr << "graph successfully initialized" << endl;
+    // std::cerr << "graph initialized" << std::endl;
     return;
 }
 
@@ -135,7 +135,7 @@ pair<vector<double>, vector<int>> Graph::dijkstra(int source, const string& mode
     return {dist, parent};
 }
 
-double Graph::heuristic (int u, int target)
+double Graph::heuristic(int u, int target)
 {
     // use straight-line (Euclidean) distance on lat/lon as a simple heuristic
     double lat1 = nodes[u].lat;
@@ -152,6 +152,7 @@ double Graph::heuristic (int u, int target)
 
 double Graph::weighted_Astar(int source, int target, double w)
 {
+    
     if(source == target)
     {
         return 0.0;
@@ -160,6 +161,7 @@ double Graph::weighted_Astar(int source, int target, double w)
     priority_queue<pair<double, int>, vector<pair<double, int>>, greater<pair<double, int>>> pq;
 
     vector<double> g(num_nodes, DBL_MAX);
+    vector<bool> closed(num_nodes, false);
     g[source] = 0.0;
 
     double h_initial = heuristic(source, target);
@@ -167,17 +169,20 @@ double Graph::weighted_Astar(int source, int target, double w)
 
     while(!pq.empty())
     {
-        double curr = pq.top().first;
         int u = pq.top().second;
         pq.pop();
+
+        if(closed[u])
+        {
+            continue;
+        }
+        closed[u] = true;
 
         if(u==target)
         {
             return g[target];
         }
 
-        double estimated = g[u] + w * heuristic(u, target);
-        if (curr > estimated + 1e-9) continue;
 
         for(auto& linked : adjlist[u])
         {
@@ -200,8 +205,6 @@ double Graph::weighted_Astar(int source, int target, double w)
 
     return DBL_MAX; //path not found
 }
-
-
 
 vector<int> Graph::reconstruct_path(int source, int target, const vector<int>& parent)
 {
@@ -259,14 +262,13 @@ double Graph::calculate_path_distance(const vector<int>& path)
     return total_distance;
 }
 
-json Graph::k_shortest_paths_exact(const json& query)
+json Graph::k_shortest_paths_exact(const json& query,json& response)
 {
     int source = query.at("source").get<int>();
     int target = query.at("target").get<int>();
     int k = query.at("k").get<int>();
     string mode = "distance";
 
-    json response;
     response["id"] = query.at("id");
     json& paths_json = response["paths"] = json::array();
 
@@ -379,7 +381,7 @@ json Graph::k_shortest_paths_exact(const json& query)
     return response;
 }
 
-json Graph::k_shortest_paths_heuristic(const json& query)
+json Graph::k_shortest_paths_heuristic(const json& query,json& response)
 {
     //get data from query
     int source = query.at("source").get<int>();
@@ -387,7 +389,7 @@ json Graph::k_shortest_paths_heuristic(const json& query)
     int k = query.at("k").get<int>();
     string mode = "distance"; //we only do distance for now
 
-    json response;
+
     response["id"] = query.at("id");
     response["paths"] = json::array();
 
@@ -456,7 +458,7 @@ json Graph::k_shortest_paths_heuristic(const json& query)
     int attempts = 0;
     //retry are allowed if we get invalid or duplicate paths
 
-    while(candidates.size()<k*2 && attempts<k*4) {
+    while(candidates.size()<k*2 && attempts<k*5) {
         attempts++;
         auto [dists, parents] = dijkstra(source, mode, forbidden_nodes, not_forbidden_types);
         if (dists[target] == DBL_MAX) break;
@@ -472,7 +474,24 @@ json Graph::k_shortest_paths_heuristic(const json& query)
             }
         }
 
-        if(unique && real_dist<=(optimal_dist*MAX_STRETCH)) {
+        unordered_set<int> new_edges;
+        for(size_t i=0; i<new_path.size()-1; i++) {
+            int eid = get_edge_id(new_path[i], new_path[i+1]);
+            if(eid != -1) new_edges.insert(eid);
+        }
+        //we penalize duplicates and retry so no infinite loops
+        if(!unique) {
+            for(int eid : new_edges) {
+                if(orig_len.find(eid) == orig_len.end()) orig_len[eid] = edges[eid].len;
+                edges[eid].len *= PENALTY_FACTOR;
+            }
+            continue;
+        }
+        bool accept = false;
+        if(candidates.size() < k) accept = true; 
+        else if(real_dist <= (optimal_dist*MAX_STRETCH)) accept = true;
+        //so we  guarantee k candidates within stretch limit
+        if(accept) {
             unordered_set<int> new_edges;
             for(size_t i=0;i<new_path.size()-1;i++) {
                 int eid = get_edge_id(new_path[i], new_path[i+1]);
@@ -510,7 +529,7 @@ json Graph::k_shortest_paths_heuristic(const json& query)
             test_group.push_back(i);
             
             double total_pen = 0;
-
+            if(best_ind == -1) best_ind = i;
             // Sum penalties for every path in this hypothetical group
             for(int ind : test_group) {
                 const auto& curr = candidates[ind];
@@ -562,15 +581,12 @@ json Graph::k_shortest_paths_heuristic(const json& query)
 
     return response;
 }
-
-json Graph::approx_shortest_path(const json& query) 
+json Graph::approx_shortest_path(const json& query,json& response) 
 {
     // placeholder implementation to ensure compilation; implement approximation later
-    json response;
     int id = query.at("id").get<int>();
     double time_budget = query.at("time_budget_ms").get<double>();
-
-    double w = 1.1; //try varying with different values of w (1.0 normal A* - 5.0 very aggressive)
+    double w = 2;
     response["id"] = id;
     vector<json> distances;
 
@@ -605,7 +621,9 @@ json Graph::approx_shortest_path(const json& query)
 }
 
 
-
-json Graph::process_query(const json& query){
+json Graph::process_query(const json& query,json& answer){
     string s = query.at("type").get<string>();
+    if(s == "k_shortest_paths") return k_shortest_paths_exact(query,answer);
+    if(s == "k_shortest_paths_heuristic") return k_shortest_paths_heuristic(query,answer);
+    if(s == "approx_shortest_path") return approx_shortest_path(query,answer);
 }

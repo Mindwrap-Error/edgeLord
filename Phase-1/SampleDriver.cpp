@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
         try{
         graph.process_query(query,result);
         } catch(...){
-            result["id"] = query.at("id").get<string>();
+            result["id"] = query.at("id").get<int>();
         }
 
         auto end_time = std::chrono::high_resolution_clock::now();

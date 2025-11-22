@@ -1,5 +1,8 @@
-[
-  {
+{
+  "meta": {
+    "id": "qset_phase2"
+  },
+  "events": [{
     "type": "k_shortest_paths",
     "id": 0,
     "source": 0,
@@ -34,5 +37,5 @@
     ],
     "time_budget_ms": 20,
     "acceptable_error_pct": 5.0
-  }
-]
+  }]
+}
