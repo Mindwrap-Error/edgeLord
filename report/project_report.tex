@@ -28,6 +28,9 @@
 
 \begin{verbatim}
 .
+|Include
+|   `-- nlohmann
+|       `-- json.hpp
 |-- Phase-1
 |   |-- include
 |   |   `-- nlohmann
@@ -35,11 +38,17 @@
 |   |-- Graph.cpp
 |   |-- Graph.hpp
 |   |-- makefile
-|   |-- phase1
 |   |-- SampleDriver.cpp
 |   `-- script.sh
 |-- Phase-2
-|-- report
+|   |-- include
+|   |   `-- nlohmann
+|   |       `-- json.hpp
+|   |-- Graph.cpp
+|   |-- Graph.hpp
+|   |-- makefile
+|   |-- SampleDriver.cpp
+|   `-- script.sh
 |-- results
 |   |-- testcase0
 |   |-- testcase1
@@ -62,9 +71,9 @@
 |   |-- testcase7
 |   |-- testcase8
 |   `-- testcase9
-|-- README.md
 |-- SampleDriver.cpp
-40 directories, 80 files
+|-- makefile
+`-- report.pdf
 \end{verbatim}
 
 \subsection{Phase 1}
@@ -73,8 +82,8 @@ This directory contains the implementation of Phase 1 queries. The include direc
 \subsection{Phase 2}
 These directories follow the same structure as Phase 1, with the implementation of Phase 2 queries. The executable is named phase2.
 
-\subsection{report}
-This directory contains the LaTeX source code of this report.
+\subsection{report.pdf}
+This pdf contains the project report.
 
 \subsection{results}
 This directory contains the output files generated after running our code on the test cases in the tests directory. Each testcase$_i$ directiory contains 2 files - output1.json and output2.json respectively for Phase 1 and Phase 2 query outputs.
@@ -82,18 +91,18 @@ This directory contains the output files generated after running our code on the
 \subsection{tests}
 Each testcase$_i$ directory contains the testcases we run our input on. Each directory contains the graph.json file which contains the graph data and the queries1.json and queries2.json files which contain the queries for Phase 1 and Phase 2 queries respectively. 
 
-\subsection{README.md}
-This file contains the instructions to compile and run the code.
-
 \section{Makefile and Targets}
-The makefile in each phase directory contains the following targets:
 \begin{description}
     \item[all:] This is the default target. It compiles the code and generates the executable file.
     \item[run:] runs the executable file on the graph.json and queries.json files present in the current directory and generates output.json file. 
     \item[clean:] removes all object files.
     \item[cleanx:] removes the executable file.
     \item[test:] executes the script.sh file to run the code on all test cases.
+    \item[phase1:] compiles the code in Phase-1 directory and generates the phase1 executable in root directory.
+    \item[phase2:] compiles the code in Phase-2 directory and generates the phase2 executable in root directory.
+    \item[clean:] removes all object files and executables in both Phase-1 and Phase-2 directories.
 \end{description}
+The first 4 targets are for makerfile in each phase directory while the last 3 targets are for the makefile in the root directory.
 
 \section{Assumptions}
 \subsection{K shortest path heuristic}
@@ -218,7 +227,7 @@ where $g(n)$ is the cost from the source to node n, $h(n)$ is the heuristic func
 
 We initialize a min-heap that stores nodes and the value computed by our function. We add the source node to queue with initial f-score based entirely on the heuristic (since g = 0). We run a loop over the priority queue until it is empty. In each iteration we pop the node and check whether it has been visited. If not we mark it as visited. If the node is the target node, we have found the shortest path and we can return. We iterate through all the neighbours of the current node and calculate the tentative g-score. If this score is better than the previously recorded g-score for that neigbour, we update the g-score and calculate its new weighted f-score and push it into the priority queue.
 
-\section{AI chats}
+\section{AI Logs}
 Following are the links to AI chats that were used during the project:
 \begin{itemize}
     \item \url{https://chatgpt.com/share/6921f560-ec18-800e-8b56-f3261fb217fa}
