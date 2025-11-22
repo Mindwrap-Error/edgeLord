@@ -688,8 +688,9 @@ json Graph::k_shortest_paths_heuristic(const json& query)
     response["paths"] = json::array();
 
     //these are out parameters for the heuristic
-    const double PENALTY_FACTOR = 1.4; 
-    const double MAX_STRETCH = 1.3; 
+    const double PENALTY_FACTOR = 1.2; 
+    const double MAX_STRETCH = 1.5; 
+    const double OVERLAP_THRESHOLD = query.at("overlap_threshold").get<double>();
 
     auto reconstruct_path = [&](int s, int t, const vector<int>& p) -> vector<int> {
         if (p[t] == -1 && s != t) return {}; //no path found
@@ -714,7 +715,13 @@ json Graph::k_shortest_paths_heuristic(const json& query)
         return dist;
     };
 
-    vector<vector<int>> paths_found;
+    struct Candidate {
+        vector<int> path;
+        double length;
+        unordered_set<int> edges; //needed to check overlap quickly
+    };
+    vector<Candidate> candidates; //store candidate paths to choose from
+
     map<int, double> orig_len; //map from edgeid to original length
 
     vector<bool> forbidden_nodes(num_nodes,false);
@@ -727,68 +734,126 @@ json Graph::k_shortest_paths_heuristic(const json& query)
     //first path is always optimal so we add it
     vector<int> first_path = reconstruct_path(source, target, parents);
     double optimal_dist = dist[target];
-    paths_found.push_back(first_path);
-    response["paths"].push_back({
-        {"path", first_path},
-        {"length", optimal_dist}
-    });
+
+    unordered_set<int> first_edges;
+    for(size_t i=0; i<first_path.size()-1; ++i) {
+        int eid = get_edge_id(first_path[i], first_path[i+1]);
+        if(eid!=-1) first_edges.insert(eid);
+    }
+    candidates.push_back({first_path, optimal_dist, first_edges});
+
 
     //add weights penalty to edges in first path
-    int s = first_path.size();
-    for(int i=0;i<s-1;i++) {
-        int eid = get_edge_id(first_path[i],first_path[i+1]);
-        if(eid != -1) {
-            if(orig_len.find(eid) == orig_len.end()) {
-                orig_len[eid] = edges[eid].len;
-            }
-            edges[eid].len *= PENALTY_FACTOR; 
-        }
+    for(int eid : first_edges) {
+        if(orig_len.find(eid) == orig_len.end()) orig_len[eid] = edges[eid].len;
+        edges[eid].len *= PENALTY_FACTOR;
     }
 
-    //finding rest k-1 paths
     int attempts = 0;
-    int max = k*3; 
     //retry are allowed if we get invalid or duplicate paths
 
-    while(paths_found.size()<k && attempts<max) {
+    while(candidates.size()<k*2 && attempts<k*4) {
         attempts++;
         auto [dists, parents] = dijkstra(source, mode, forbidden_nodes, not_forbidden_types);
+        if (dists[target] == DBL_MAX) break;
 
-        if (dists[target] == DBL_MAX) break; //all paths exhausted
-        vector<int> path = reconstruct_path(source, target, parents);
-        double real_dist = calculate_real_distance(path, orig_len);
+        vector<int> new_path = reconstruct_path(source, target, parents);
+        double real_dist = calculate_real_distance(new_path, orig_len);
 
         bool unique = true;
-        for (const auto& existing : paths_found) {
-            if (existing == path) {
-                unique = false;
-                break;
+        for(const auto& c : candidates) {
+            if(c.path == new_path) { 
+                unique = false; 
+                break; 
             }
         }
 
-        bool goodlen = (real_dist <= (optimal_dist*MAX_STRETCH));
-        if(unique && goodlen) {
-            paths_found.push_back(path);
-            response["paths"].push_back({
-                {"path", path},
-                {"length", real_dist}
-            });
-        }
-
-        //apply penalty irrespective of acceptance (same as before)
-        for (size_t i=0;i<path.size()-1;i++) {
-            int eid = get_edge_id(path[i], path[i+1]);
-            if (eid != -1) {
-                if (orig_len.find(eid) == orig_len.end()) {
-                    orig_len[eid] = edges[eid].len;
-                }
+        if(unique && real_dist<=(optimal_dist*MAX_STRETCH)) {
+            unordered_set<int> new_edges;
+            for(size_t i=0;i<new_path.size()-1;i++) {
+                int eid = get_edge_id(new_path[i], new_path[i+1]);
+                if(eid!=-1) new_edges.insert(eid);
+            }
+            candidates.push_back({new_path, real_dist, new_edges});
+            
+            //penalty to found path
+            for (int eid : new_edges) {
+                if (orig_len.find(eid) == orig_len.end()) orig_len[eid] = edges[eid].len;
                 edges[eid].len *= PENALTY_FACTOR;
             }
         }
     }
-    //restore original lengths
+
+    //restore edges to their original lengths
     for (auto const& [eid, original_len] : orig_len) {
         edges.at(eid).len = original_len;
+    }
+
+    //we will now select the best k path based on penalty scores
+    vector<int> selected = {0}; //shortest path always
+
+    while(selected.size()<k && selected.size()<candidates.size()) {
+        int best_ind = -1;
+        double min_score = DBL_MAX;
+
+        for(size_t i=1;i<candidates.size();i++) {
+            bool present = false;
+            for(int s : selected) if(s == (int)i) present = true;
+            if(present) continue;
+
+            //what if we added i
+            vector<int> test_group = selected;
+            test_group.push_back(i);
+            
+            double total_pen = 0;
+
+            // Sum penalties for every path in this hypothetical group
+            for(int ind : test_group) {
+                const auto& curr = candidates[ind];
+                
+                //distance penalty
+                double dist_pen = ((curr.length-optimal_dist)/optimal_dist) + 0.1;
+
+                //we calculate overall penlty as given in statement
+                int overlap_pen = 0;
+                for(int ind1 : test_group) {
+                    int common = 0;
+                    for(int eid : curr.edges) { //here we include itself as given
+                        if(candidates[ind1].edges.count(eid)) common++; //if present in both
+                    }
+                    
+                    double total_overlap = 0;
+                    if(!curr.edges.empty()) total_overlap = (double)common/curr.edges.size();
+                    if(total_overlap > OVERLAP_THRESHOLD) overlap_pen++;
+                }
+
+                total_pen += (dist_pen*overlap_pen);
+            }
+
+            if(total_pen<min_score) { //here we minimize total penalty as required
+                min_score = total_pen;
+                best_ind = i;
+            }
+        }
+
+        if(best_ind != -1) selected.push_back(best_ind);
+        else break;
+    }
+
+    //get all final candidates
+    vector<Candidate> valid_cand;
+    for(int idx : selected) valid_cand.push_back(candidates[idx]);
+
+    //sort by using custom comparator (which is order of length)
+    sort(valid_cand.begin(), valid_cand.end(), [](const Candidate& a, const Candidate& b){
+        return a.length < b.length;
+    });
+
+    for(const auto& c : valid_cand) {
+        response["paths"].push_back({
+            {"path", c.path},
+            {"length", c.length}
+        });
     }
 
     return response;
