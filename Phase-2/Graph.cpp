@@ -8,6 +8,14 @@ using std::greater;
 using std::map;
 using std::unordered_set;
 
+
+struct Candidate {
+    vector<int> path;
+    double length;
+    unordered_set<int> edges; //for fast checking of overlap its needed
+};
+
+
 int type_to_int(string& s){
     int type=-1;
     if(s == "local") type = 0;
@@ -380,11 +388,6 @@ json Graph::k_shortest_paths_exact(const json& query,json& response)
 
     return response;
 }
-struct Candidate {
-    vector<int> path;
-    double length;
-    unordered_set<int> edges; //for fast checking of overlap its needed
-};
 
 //calculate penalty for a specific group of indices
 double calculate_group_score(const vector<int>& group_indices, const vector<Candidate>& candidates, double optimal_dist, double threshold) {
@@ -551,16 +554,11 @@ json Graph::k_shortest_paths_heuristic(const json& query,json& response)
         else if(real_dist <= (optimal_dist*MAX_STRETCH)) accept = true;
         //so we  guarantee k candidates within stretch limit
         if(accept) {
-            unordered_set<int> new_edges;
-            for(size_t i=0;i<new_path.size()-1;i++) {
-                int eid = get_edge_id(new_path[i], new_path[i+1]);
-                if(eid!=-1) new_edges.insert(eid);
-            }
             candidates.push_back({new_path, real_dist, new_edges});
             
             //penalty to found path
             for (int eid : new_edges) {
-                if (orig_len.find(eid) == orig_len.end()) orig_len[eid] = edges[eid].len;
+                if(orig_len.find(eid) == orig_len.end()) orig_len[eid] = edges[eid].len;
                 edges[eid].len *= PENALTY_FACTOR;
             }
         }
@@ -574,10 +572,20 @@ json Graph::k_shortest_paths_heuristic(const json& query,json& response)
     //we will now select the best k path based on total penalty scores
     //here we do brute force as k is very small
     vector<int> best_group_indices;
-    double minscore = DBL_MAX;
-    vector<int> initial_group = {0}; 
-    //we start looking from index 1
-    find_best_subset(k,1,initial_group,candidates,optimal_dist,OVERLAP_THRESHOLD,minscore,best_group_indices);
+    
+    if(candidates.size() <= k) { //return these directly
+        for(size_t i=0;i<candidates.size();i++) {
+            best_group_indices.push_back(i);
+        }
+    } 
+    else {
+        //use the recursion we created
+        double minscore = DBL_MAX;
+        vector<int> initial_group = {0}; //shortest path always present
+        //from index 1 of the set we start
+        find_best_subset(k, 1, initial_group, candidates, optimal_dist, OVERLAP_THRESHOLD, minscore, best_group_indices);
+    }
+
     //get all final candidates
     vector<Candidate> valid_cand;
     for(int idx : best_group_indices) valid_cand.push_back(candidates[idx]);
