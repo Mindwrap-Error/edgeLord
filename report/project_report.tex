@@ -13,14 +13,17 @@
 \usepackage{algorithm}
 \usepackage{algorithmic}
 
-\title{DSA Project Report}
-\author{24B1012, 24B1010, 24B0929}
+\title{DSA Project Report
+\\ Segfault Squad}
+\author{24B0929, 24B1010, 24B1012}
 \date{November 2025}
 
 \begin{document}
 
 \maketitle
-
+\newpage
+\tableofcontents
+\newpage
 \section{Directory Structure}
 
 \begin{verbatim}
@@ -36,7 +39,6 @@
 |   |-- SampleDriver.cpp
 |   `-- script.sh
 |-- Phase-2
-|-- Phase-3
 |-- report
 |-- results
 |   |-- testcase0
@@ -68,8 +70,8 @@
 \subsection{Phase 1}
 This directory contains the implementation of Phase 1 queries. The include directory contains the header files we have used in the project. This includes the nlohmann folder that houses the single include json.hpp file to help us parse json files in C++. Next we have the Graph.cpp and the Graph.hpp files which contain the implementation and declaration of the Graph class respectively. The makefile is used to compile the code. phase1 is the executable file that is generated after compilation. SampleDriver.cpp is the driver code that is given to parse the json queries and call the appropriate C++ functions. script.sh is the bash script that we use to run our code on multiple test cases.
 
-\subsection{Phase 2 and Phase 3}
-These directories follow the same structure as Phase 1, with the implementation of Phase 2 and Phase 3 queries respectively. The executables are named phase2 and phase3 respectively.
+\subsection{Phase 2}
+These directories follow the same structure as Phase 1, with the implementation of Phase 2 queries. The executable is named phase2.
 
 \subsection{report}
 This directory contains the LaTeX source code of this report.
@@ -84,16 +86,85 @@ Each testcase$_i$ directory contains the testcases we run our input on. Each dir
 This file contains the instructions to compile and run the code.
 
 \section{Makefile and Targets}
+The makefile in each phase directory contains the following targets:
+\begin{description}
+    \item[all:] This is the default target. It compiles the code and generates the executable file.
+    \item[run:] runs the executable file on the graph.json and queries.json files present in the current directory and generates output.json file. 
+    \item[clean:] removes all object files.
+    \item[cleanx:] removes the executable file.
+    \item[test:] executes the script.sh file to run the code on all test cases.
+\end{description}
 
 \section{Assumptions}
+\subsection{K shortest path heuristic}
+\begin{itemize}
+    \item We assume that the penalty factor and stretch factor used in the heuristic approach are appropriate for generating diverse candidate paths. These factors may need to be tuned based on the specific characteristics of the input graphs to achieve optimal performance.
+    \item We assume that we can find atleast K candidate paths within the maximum number of attempts specified (250 in our case) because otherwise there might exist paths which we should output but are not outputting them due to the attempt limit. 
+    \item We assume that the input graphs are connected and that there exists at least one path between the source and target nodes for the K shortest paths query else no heuristic paths are found.
+\end{itemize}
+
 
 \section{Test Case and Analysis}
+We have not used any script to generate test cases. We have borrowed the test case and results from another group. We have run our code on the test cases and compared our output with the expected output(their output). We have compared our output with expected output using the script.sh script which has been described in the next section.
 
 \section{Python Scripts and Libraries}
+We have used a bash script to run out code on multiple test cases. This bash script creates a python script to compare our output with the expected output and prints the differences accordingly(A more intelligent comparison was needed rather than just comparing using diffs since processing times were bound to be different).\\ The python script uses the json library to parse the json files and compare the outputs and the sys library to take command line arguments.\\
+After this the bash script runs the python script on each test case and prints the differences accordingly.
+Finally the bash script removes the python script created.
+
 
 \section{Time and Space Complexity}
 
+Let $V$ be the number of vertices and $E$ be the number of edges in the graph. Let $K$ be the number of shortest paths to be found.
 
+\subsection{Remove Edge}
+\begin{itemize}
+    \item \textbf{Time Complexity:} $\mathcal{O}(1)$ - We use a hash map to store edges for $\mathcal{O}(1)$ access.
+    \item \textbf{Space Complexity:} $\mathcal{O}(E)$ - We store all edges in a hash map.
+\end{itemize}
+
+\subsection{Modify Edge}
+\begin{itemize}
+    \item \textbf{Time Complexity:} $\mathcal{O}(1)$ - We use a hash map to store edges for $\mathcal{O}(1)$ access.
+    \item \textbf{Space Complexity:} $\mathcal{O}(E)$ - We store all edges in a hash map. 
+\end{itemize}
+
+\subsection{Shortest Path}
+\begin{itemize}
+    \item \textbf{Time Complexity:} $\mathcal{O}((V + E) \log V)$ - We use Dijkstra's algorithm with a priority queue.
+    \item \textbf{Space Complexity:} $\mathcal{O}(V + E)$ - We store the graph using adjacency lists.
+\end{itemize}
+\subsection{KNN}
+\begin{itemize}
+    \item \textbf{Time Complexity:} $\mathcal{O}(V \log K + (V + E) \log V)$ - For Euclidean KNN, we compute distances to all nodes and maintain a max-heap of size K. For Shortest Path KNN, we run Dijkstra's algorithm.
+    \item \textbf{Space Complexity:} $\mathcal{O}(V + E + K)$ - We store the graph using adjacency lists and maintain a max-heap of size K.
+\end{itemize}
+
+\subsection {K shortest paths (exact)}
+\begin{itemize}
+\item \textbf{Time Complexity:} We need to find the time complexity of Yen's algorithm here. The time complexity of Dijsktra's algorithm using a min-heap is $\mathcal{O}((V + E) \log V)$. In the worst case, we may need to find k shortest paths, and for each path, we may need to run Dijkstra's algorithm up to V times (once for each node in the path). Therefore, the overall time complexity of Yen's algorithm is $\mathcal{O}(kV(V + E) \log V)$.
+
+\item \textbf{Space Complexity:} The space complexity is $\mathcal{O}(V + E)$ to store the graph and $\mathcal{O}(kV)$ to store the k shortest paths.
+\end{itemize}
+
+
+
+\subsection{K Shortest Paths (heuristic)}
+\begin{itemize}
+    \item \textbf{Time Complexity:} In the first part of our function, we run Dijkstra algorithm max\_attempts times to find candidate paths. Each Dijkstra run takes $\mathcal{O}((V + E) \log V)$ time using a priority queue. Therefore, the time complexity for finding candidate paths is $\mathcal{O}(\text{max\_attempts} \cdot (V + E) \log V)$ where max\_attempts is a constant (250 in our case). In the second part, we evaluate all combinations of candidate paths to select the best K paths. If we have $C$ candidate paths, evaluating all combinations of size $K$ takes $\mathcal{O}\left(\binom{C}{K} \cdot K^2 \cdot L\right)$ time, where $L$ is the average length of path. We get this since the time complexity of calculate\_group\_score() is $K^2$ and it is called once for each subset of size K. Since $K$ is small (between 2 and 7), this part is manageable as maximum value of $C$ is $2\cdot K$. Thus, the overall time complexity is dominated by the Dijkstra runs, resulting in an overall time complexity of $\mathcal{O}(A(V + E) \log V)$ where A is maximum attempts. This is well within acceptable limits for our input size which is capped at 5000 nodes.
+    
+    \item \textbf{Space Complexity:}
+    The space complexity is $\mathcal{O}(V + E)$, which accounts for storing the graph representation (adjacency list) and additional data structures used during the execution of Dijkstra's algorithm, such as distance and parent arrays. The candidate paths and their associated data also contribute to the space complexity, but since $K$ is small, this does not significantly affect the overall space complexity. All the distance and parent arrays used in Dijkstra's algorithm are of size $\mathcal{O}(V)$, and the graph representation takes $\mathcal{O}(V + E)$ space. Therefore, the overall space complexity remains $\mathcal{O}(V + E)$.
+\end{itemize}
+
+\subsection {K shortest paths (approx)}
+\begin{itemize}
+    \item \textbf{Time Complexity:} The worse-case time complexity of the Weighted A* algorithm is the same as that of the standard A* algorithm i.e $\mathcal{O}(E \log V)$. In the worst case, the algorithm may visit every node and relax eery edge. We use a min-heap to store the nodes to be explored. Each edge is processed once. For each edge, we might perfor a heap operation (insert or update) which takes $\mathcal{O}(log V)$ time. Therefore, the overall time complexity is $\mathcal{O}(E log V)$.
+    
+    The effective time complexity is lower in practice due to the heuristic pruning. By inflating the $h(n)$ value, the algorithm prioritizes nodes closer to the target more aggressively. This reduces the number of nodes explored, leading to faster execution in larger graphs. 
+
+    \item \textbf{Space Complexity:} The space complexity is $\mathcal{O}(V + E)$ to store the graph and $\mathcal{O}(V)$ for the priority queue and other data structures used in the algorithm.
+\end{itemize}
 
 \section{Approach for Each Query}
 
@@ -116,14 +187,46 @@ There are two types of KNN queries: one based on euclidean distance and the othe
 
 \subsection{Phase 2 Queries}
 
+\subsubsection{K shortest paths (exact)}
+To find the k shortest paths between a source and target node, we implement Yen's algorithm. The algorithm works as follows:
+
+We begin by running a standard Dijsktra's search to find the optimal path from the source to the target. This path is stored as the first entry in our paths vector. 
+
+To find the next shortest path, we look at the previous shortest path and try to deviate from it at every possible node. For each node in the previous path (except the destination), we do the following:
+
+\begin{itemize}
+\item Define the spur node as the current node that is being processed. This acts as the "deviation point" where the new path will branch off.
+\item Define the rooth path as the path form the source to the spur node. This path remains fixed for this iteration.
+\end{itemize}
+
+To ensure the algorithm finds a new path that is different from previous ones, it temporarily modifies the graph. It looks at all previoiusly disovered paths. If a previous path shares the same root path, the edge immediately from the spur node in the previous path is disabled (marked disabled = true). This forces the new path to deviate from the previous paths. To ensure the paths are loopless, all nodes appearing in the root path are also forbidden temporarily. With these constraints, we run Dijkstra's from the spur node to the target. This results in a spur path. We combine it with the root path to form a total path. This path is added to a min-heap of candidate paths. After checking all deviation points, the graph edges are re-enabled for the next iteration. The algorithm returns the best path from the candidate paths heap.
+
 \subsubsection{K shortest paths (heuristic)}
 
 Unlike before where we used Yen's algorithm to find K shortest paths, we now use a heuristic approach to find candidate paths and then select the best one based on certain criteria. For finding the candidate paths, we first find the shortest path using Dijkstra's algorithm. We then multiply the edge weights of the edges in the shortest path by a penalty factor which needs to be tuned appropriately and run Dijkstra's algorithm again to find another path. We repeat this process until we have adequate number of candidate paths. Penalty is also implemented for paths that are unique so that running Dijkstra again does not return same path which will lead to infinite loop. The candidate paths is valid if we do not get a previously found path again and if the length of the path is within a certain stretch factor of the original shortest path length after the size of candidate set is k in order to ensure k outputs. 
 
 \noindent Once we have the candidate paths, we need to choose the K paths among them. To do this, we calculate 2 types of penalties for each candidate path: distance penalty and overlap penalty. Since K is between 2 and 7, we have calculated to total penalty of all sets of size k with shortest path present in it. The set which minimizes total penalty is out set of best candidates. These k paths are then returned but if there does not exist k paths then we return all possible paths. This is not a greedy algorithm as we check for everything to minimize the total penalty as much as possible.
 
-\section{Phase 3 Explanation}
+\subsubsection{K shortest paths (Approx)}
+We are asked to prioritse speed over accuracy in this query. This means that there will exist a trade off between speed and accuracy.
+We use a modified version of the A* algorithm called the weighted A* algorithm. 
 
+We define the heuristic function as the straight line distance between the current node and the target. We applied a conversion factor (approximately 111km per degree) to cnovert the latitude and longitude differences into approximate distances. We scale the heuristic function by a weight factor w $>$ 1. This makes the algorithm more greedy and faster but less accurate.
 
+Define $f(n) = g(n) + w \cdot h(n)$
+where $g(n)$ is the cost from the source to node n, $h(n)$ is the heuristic function (straight line distance from n to target), and w is the weight factor.
+
+We initialize a min-heap that stores nodes and the value computed by our function. We add the source node to queue with initial f-score based entirely on the heuristic (since g = 0). We run a loop over the priority queue until it is empty. In each iteration we pop the node and check whether it has been visited. If not we mark it as visited. If the node is the target node, we have found the shortest path and we can return. We iterate through all the neighbours of the current node and calculate the tentative g-score. If this score is better than the previously recorded g-score for that neigbour, we update the g-score and calculate its new weighted f-score and push it into the priority queue.
+
+\section{AI chats}
+Following are the links to AI chats that were used during the project:
+\begin{itemize}
+    \item \url{https://chatgpt.com/share/6921f560-ec18-800e-8b56-f3261fb217fa}
+    \item \url{https://gemini.google.com/share/8048a10707bc}
+    \item \url{https://chatgpt.com/share/6921f4bc-cd70-800e-9681-c1987ae62140}
+    \item \url{https://gemini.google.com/share/e13a328ce343}
+    \item \url{https://gemini.google.com/share/973a4576fdcc}
+    \item \url{https://gemini.google.com/share/4ee9834abdc9}
+\end{itemize}
 
 \end{document}

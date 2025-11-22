@@ -346,7 +346,7 @@ json Graph::shortest_path(const json& q3,json& answer){
 
     if(possible){
         answer["path"] = final_path;
-        answer["minumum_time/minimum_distance"] = mincost;
+        answer["minimum_time/minimum_distance"] = mincost;
     }
     return answer;
 

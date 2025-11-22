@@ -460,8 +460,8 @@ json Graph::k_shortest_paths_heuristic(const json& query,json& response)
     response["paths"] = json::array();
 
     //these are out parameters for the heuristic
-    const double PENALTY_FACTOR = 1.2; 
-    const double MAX_STRETCH = 1.5; 
+    const double PENALTY_FACTOR = 3; 
+    const double MAX_STRETCH = 3; 
     const double OVERLAP_THRESHOLD = query.at("overlap_threshold").get<double>();
 
     auto reconstruct_path = [&](int s, int t, const vector<int>& p) -> vector<int> {
@@ -519,8 +519,8 @@ json Graph::k_shortest_paths_heuristic(const json& query,json& response)
 
     int attempts = 0;
     //retry are allowed if we get invalid or duplicate paths
-
-    while(candidates.size()<k*2 && attempts<k*5) {
+    int max_attempts = 250;
+    while(candidates.size()<k*2 && attempts<max_attempts) {
         attempts++;
         auto [dists, parents] = dijkstra(source, mode, forbidden_nodes, not_forbidden_types);
         if (dists[target] == DBL_MAX) break;
